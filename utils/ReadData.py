@@ -6,6 +6,12 @@ import matplotlib.pyplot as plt
 import time
 import streamlit as st
 
+import os,time
+ 
+os.environ['TZ'] = 'Asia/Shanghai'
+time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
+
+
 def str2timestamp(str_time:str, time_format:str='%Y-%m-%d %H:%M:%S')->int:
     '''
     将年月日时分秒的数据转化为时间戳，未乘1000

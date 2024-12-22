@@ -164,7 +164,7 @@ def Energy_Sum():
     energy = ReadData.TimeIntervalTransform(df, str(pd.to_datetime(date)-pd.Timedelta(days=1)).split()[0], time_interval=15, DataType='P2Energy')
     energy_sum_yesterday = energy['Energy'].sum()
 
-    st.metric(label='日用电量', value=str(energy_sum)+' kWh', delta=str(round(energy_sum-energy_sum_yesterday,2))+' kWh', delta_color='normal' if energy_sum-energy_sum_yesterday>0 else 'inverse')
+    st.metric(label='日用电量', value=str(round(energy_sum,2))+' kWh', delta=str(round(energy_sum-energy_sum_yesterday,2))+' kWh', delta_color='normal' if energy_sum-energy_sum_yesterday>0 else 'inverse')
 
 
 
