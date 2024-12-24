@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import streamlit as st
-from Globals import TIME_INTERVAL
+from Globals import TIME_INTERVAL, NUM_POINTS, CHANGE_LOWER, CHANGE_UPPER
 import base64
 
 import os,time
@@ -207,6 +207,34 @@ def ReadInnerTemperature(PhoneNum:str, Password:str, date:str=None):
     else:
         df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')
         return df['Temperature'].iloc[-1]
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def find_change_point(data):
+    # 这里默认是96个点
+    length = data.shape[0]
+    # 求差分
+    diff = np.diff(data)
+    for i in range(length-NUM_POINTS-1):
+        if_point = True
+        for j in range(NUM_POINTS):
+            if abs(diff[i+j])>CHANGE_LOWER:
+                if_point = False
+        if diff[i+NUM_POINTS]<CHANGE_UPPER:
+            if_point = False
+        if if_point:
+            return i+NUM_POINTS
+    return 0
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Each_Weekday(date:str=None):
+    '''
+    判断星期几
+    '''
+    week_day_dict = {'Monday':'星期一', 'Tuesday':'星期二', 'Wednesday':'星期三', 'Thursday':'星期四', 'Friday':'星期五', 'Saturday':'星期六', 'Sunday':'星期日'}
+    if (not date) or date == str(pd.to_datetime('today').date()):
+        week_day = time.strftime('%A', time.localtime())
+    else:
+        week_day = pd.to_datetime(date).day_name()
+    return week_day_dict[week_day]
 
 if __name__ == '__main__':
     # phone_num = '15528932507'

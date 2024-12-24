@@ -1,7 +1,7 @@
 from utils import ReadData
 import streamlit as st
 from streamlit_echarts import st_pyecharts as st_echarts
-from pyecharts.charts import Bar,Line,HeatMap
+from pyecharts.charts import Bar,Line,HeatMap,Pie
 from pyecharts import options as opts
 import time
 import numpy as np
@@ -27,6 +27,7 @@ def power_curve():
     用电曲线
     '''
     global date
+    height = containe1_height-140
 
     clo1, col2, col3 = st.columns([0.5, 0.3, 0.2])
     with clo1:
@@ -46,7 +47,7 @@ def power_curve():
         if show_raw_data:
             dataset = Form_Dataset(df, data_raw, DataType)
             figure = (
-                Line(init_opts=opts.InitOpts(width='1000px'))
+                Line(init_opts=opts.InitOpts(width='1000px', height=height))
                 .add_dataset(source=dataset)
                 .add_yaxis(series_name=DataType+'_Raw', y_axis=[], encode={'x': 'Time', 'y': 'RawData'}, is_connect_nones=False, itemstyle_opts=opts.ItemStyleOpts(color='gray', opacity=0.7))
                 .add_yaxis(series_name=DataType, y_axis=[], encode={'x': 'Time', 'y': 'Data'}, is_connect_nones=True, linestyle_opts=opts.LineStyleOpts(width=2))
@@ -72,7 +73,7 @@ def power_curve():
         else:
             x_axis = [i[-8:] for i in df['Time'].tolist()]
             figure = (
-                Line(init_opts=opts.InitOpts(width='1000px', height='1000px'))
+                Line(init_opts=opts.InitOpts(width='1000px', height=height))
                 .add_xaxis(x_axis)
                 .add_yaxis(DataType, df[DataType].tolist())
 
@@ -98,7 +99,7 @@ def power_curve():
         # 画柱形图
         x_axis = [i[-8:] for i in energy['Time'].tolist()]
         figure = (
-            Bar(init_opts=opts.InitOpts(width='1000px', height='1000px'))
+            Bar(init_opts=opts.InitOpts(width='1000px', height=height))
             .add_xaxis(x_axis)
             .add_yaxis('电量', energy['Energy'].tolist())
 
@@ -119,37 +120,26 @@ def power_curve():
                 markline_opts=opts.MarkLineOpts(data=[opts.MarkLineItem(type_='average', name='平均值')]),
             )
         )
-    st_echarts(figure, height=400)
+    st_echarts(figure, height=height)
+
+
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
-def find_change_point(data):
-    # 这里默认是96个点
-    length = data.shape[0]
-    # 求差分
-    diff = np.diff(data)
-    for i in range(length-num_points-1):
-        if_point = True
-        for j in range(num_points):
-            if abs(diff[i+j])>change_lower:
-                if_point = False
-        if diff[i+num_points]<change_upper:
-            if_point = False
-        if if_point:
-            return i+num_points
-    return 0
+def calculate_start_and_end(date1):
+    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date1, PhoneNum=PhoneNum, password=password, DataType='P')
+    df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P')
+    time_list = [str(i)[-8:] for i in df['Time'].tolist()]
+    data = df['P'].to_numpy()
+    start_index = ReadData.find_change_point(data)
+    end_index = 96-ReadData.find_change_point(data[::-1])-1
+    return time_list,start_index, end_index
 
 def start_and_end():
     '''
     用电开始和结束时间
     '''
     global date
-
-    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
-    df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P')
-    data = df['P'].to_numpy()
-    time_list = [str(i)[-8:] for i in df['Time'].tolist()]
-    start_index = find_change_point(data)
-    end_index = 96-find_change_point(data[::-1])-1
+    time_list, start_index, end_index = calculate_start_and_end(date)
 
     st.success('用电开始时间：'+time_list[start_index])
     st.warning('用电结束时间：'+time_list[end_index])
@@ -173,23 +163,12 @@ def Energy_Sum():
     energy_sum, energy_sum_yesterday = Calculate_Energy_Sum(date)
     st.metric(label='日用电量', value=str(round(energy_sum,2))+' kWh', delta=str(round(energy_sum-energy_sum_yesterday,2))+' kWh', delta_color='normal' if energy_sum-energy_sum_yesterday>0 else 'inverse')
 
-@st.cache_data(ttl=TIME_INTERVAL*60)
-def Each_Weekday(date:str=None):
-    '''
-    判断星期几
-    '''
-    week_day_dict = {'Monday':'星期一', 'Tuesday':'星期二', 'Wednesday':'星期三', 'Thursday':'星期四', 'Friday':'星期五', 'Saturday':'星期六', 'Sunday':'星期日'}
-    if (not date) or date == str(pd.to_datetime('today').date()):
-        week_day = time.strftime('%A', time.localtime())
-    else:
-        week_day = pd.to_datetime(date).day_name()
-    return week_day_dict[week_day]
 
 def Show_Weather():
     '''展示天气情况'''
     global date
     condition, temp, humidity = ReadData.ReadWeather(date)
-    weekday = Each_Weekday(date)
+    weekday = ReadData.Each_Weekday(date)
     inner_temp = ReadData.ReadInnerTemperature(PhoneNum, password, date)
     card(
         title= weekday+' '+condition,
@@ -212,6 +191,54 @@ def Show_Weather():
         }
     )
 
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Calculate_Peak_Valley_Prop(date):
+    '''
+    计算高峰用电占比和低谷用电量
+    '''
+    time_list, start_index, end_index = calculate_start_and_end(date)
+    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
+    df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P2Energy')
+    data = df['Energy'].to_numpy()
+    peak_energy = data[start_index:end_index].sum()
+    valley_energy = data[:start_index].sum()+data[end_index:].sum()
+    return peak_energy, valley_energy
+
+def Show_Peak_Prop():
+    '''
+    计算高峰用电占比和低谷用电占比
+    '''
+    global date
+    peak_energy, valley_energy = Calculate_Peak_Valley_Prop(date)
+    data = {'高峰用电':round(peak_energy,2), '低谷用电':round(valley_energy,2)}
+    # 环形图
+    figure = (
+        Pie(init_opts=opts.InitOpts(width='100px', height='100px'))
+        .add("", [list(z) for z in data.items()], radius=["40%", "75%"])
+        
+        .set_global_opts(
+            title_opts={"text": "用电占比"},
+            graphic_opts=[
+                {
+                    "type": "text",
+                    "left": "center",
+                    "top": "center",
+                    "style": {
+                        "text": "高峰占比\n\n"+str(round(data['高峰用电']/(data['高峰用电']+data['低谷用电']),2)*100)+'%',
+                        "textAlign": "center",
+                        "fill": "red",
+                        "fontSize": 15,
+                        # 加粗
+                        "fontWeight": "bold",
+                    },
+                }
+            ],
+            legend_opts=opts.LegendOpts(pos_left="right", orient="vertical")
+        )
+        # .set_series_opts(label_opts={"formatter": "{b}"})
+    )
+    st_echarts(figure, height=250, width=250)
+
 if __name__=='__main__':
     st.title('用电情况总览')
 
@@ -220,16 +247,16 @@ if __name__=='__main__':
     password = PASSWORD
     BeeID = '86200001187'
     mac = 'Mt3-M1-84f703120b64'
+    containe1_height = 700
 
     # 其他参数
-    change_lower = 400
-    change_upper = 500
-    num_points = 2
+    
+    
 
     # 全局变量
     date = None
-
-    with st.container(height=530, border=True):
+    # 如果高峰用电占比少于60%，则显示警告
+    with st.container(height=containe1_height, border=True):
         col1, col2 = st.columns([8, 2])
         with col1:
             power_curve()
@@ -237,7 +264,9 @@ if __name__=='__main__':
             Show_Weather()
             start_and_end()
             Energy_Sum()
-            st.write('这边似乎应该有点什么东西，但我还没想到......')
+            Show_Peak_Prop()
+    if Calculate_Peak_Valley_Prop(date)[0]/(Calculate_Peak_Valley_Prop(date)[0]+Calculate_Peak_Valley_Prop(date)[1])<0.7:
+        st.warning('高峰用电占比过少，请检查用电情况！')
 
 
 
