@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import time
 import streamlit as st
 from Globals import TIME_INTERVAL
+import base64
 
 import os,time
  
@@ -154,25 +155,81 @@ def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTE
         df_temp['Energy'] = np.round(data, 2)
     return df_temp
 
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def ReadWeather(date:str=None):
+    '''
+    获取天气信息
+    Parameters
+    date : str
+        查询的日期，格式为'%Y-%m-%d'
+    Returns
+    -------
+    str
+        天气
+    float
+        温度
+    float
+        湿度
+    '''
+    if (not date) or date == str(datetime.datetime.now().date()):
+        url = 'https://api.weatherapi.com/v1/current.json?key=4ac8a9797998437d985122700242412&q=ShangHai/MinHang&aqi=no'
+        response = requests.get(url)
+        # 加载成字典
+        data = response.json()
+        # 返回天气和温度
+        return data['current']['condition']['text'],data['current']['temp_c'],data['current']['humidity']
+    else:
+        url = 'https://api.weatherapi.com/v1/history.json?key=4ac8a9797998437d985122700242412&q=ShangHai&dt='+date
+        response = requests.get(url)
+        data = response.json()
+        return data['forecast']['forecastday'][0]['day']['condition']['text'],data['forecast']['forecastday'][0]['day']['avgtemp_c'],data['forecast']['forecastday'][0]['day']['avghumidity']
+
+def image2base64(image_path:str)->str:
+    '''
+    将图片转化为base64编码
+    '''
+    with open(image_path, "rb") as f:
+        data = f.read()
+    encoded = base64.b64encode(data)
+    return "data:image/png;base64," + encoded.decode("utf-8")
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def ReadInnerTemperature(PhoneNum:str, Password:str, date:str=None):
+    '''
+    获取室内温度
+    '''
+    mac = 'Irc-M1-7cdfa1b89d38'
+    if (not date) or date == str(datetime.datetime.now().date()):
+        date = str(datetime.datetime.now().date())
+        df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')
+        # 返回最后一个数
+        return df['Temperature'].iloc[-1]
+    else:
+        df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')
+        return df['Temperature'].iloc[-1]
 
 if __name__ == '__main__':
-    phone_num = '15528932507'
-    password = '123456'
-    BeeID = '86200001289'
-    BeeID2 = '86200001187'
-    mac = 'Sck-M1-7cdfa1b85f04'
-    time = '2024-12-22'
-    people_detector = 'Irs-M1-7cdfa1b85e28'
-    all_mac = 'Mt3-M1-84f703120b64'
+    # phone_num = '15528932507'
+    # password = '123456'
+    # BeeID = '86200001289'
+    # BeeID2 = '86200001187'
+    # mac = 'Sck-M1-7cdfa1b85f04'
+    # time = '2024-12-22'
+    # people_detector = 'Irs-M1-7cdfa1b85e28'
+    # all_mac = 'Mt3-M1-84f703120b64'
 
-    df = ReadData_Day(beeId=BeeID2, mac=all_mac, time=time, PhoneNum=phone_num, password=password, DataType='P')
-    print(df)
+    # df = ReadData_Day(beeId=BeeID2, mac=all_mac, time=time, PhoneNum=phone_num, password=password, DataType='P')
+    # print(df)
 
-    df = TimeIntervalTransform(df, time, time_interval=15, DataType='P')
-    print(df[40:])
+    # df = TimeIntervalTransform(df, time, time_interval=15, DataType='P')
+    # print(df[40:])
 
-    plt.show()
-    # print(type(df['TimeStamp'][0]))
+    # plt.show()
+    # # print(type(df['TimeStamp'][0]))
+
+    date = '2024-12-22'
+    condition, temp, humidity = ReadWeather(date)
+    print(condition, temp, humidity)
 
 
 

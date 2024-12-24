@@ -7,6 +7,8 @@ import time
 import numpy as np
 import pandas as pd
 from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
+from streamlit_extras.card import card
+import base64
 
 st.set_page_config(layout='wide')
 
@@ -24,7 +26,7 @@ def power_curve():
     '''
     用电曲线
     '''
-    global date, time1, time2, time3
+    global date
 
     clo1, col2, col3 = st.columns([0.5, 0.3, 0.2])
     with clo1:
@@ -36,13 +38,11 @@ def power_curve():
     if DataType=='功率':
         with col3:
             show_raw_data = st.toggle('显示原始数据', False, help='是否显示原始数据，若为“是”，则可能减慢运行速度。')
-    time1 = time.time()
     df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
     data_raw = df.copy()
     DataType = 'P' if DataType=='功率' else 'Energy'
     if DataType=='P':
         df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType=DataType)
-        time2 = time.time()
         if show_raw_data:
             dataset = Form_Dataset(df, data_raw, DataType)
             figure = (
@@ -120,7 +120,6 @@ def power_curve():
             )
         )
     st_echarts(figure, height=400)
-    time3 = time.time()
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def find_change_point(data):
@@ -174,6 +173,44 @@ def Energy_Sum():
     energy_sum, energy_sum_yesterday = Calculate_Energy_Sum(date)
     st.metric(label='日用电量', value=str(round(energy_sum,2))+' kWh', delta=str(round(energy_sum-energy_sum_yesterday,2))+' kWh', delta_color='normal' if energy_sum-energy_sum_yesterday>0 else 'inverse')
 
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Each_Weekday(date:str=None):
+    '''
+    判断星期几
+    '''
+    week_day_dict = {'Monday':'星期一', 'Tuesday':'星期二', 'Wednesday':'星期三', 'Thursday':'星期四', 'Friday':'星期五', 'Saturday':'星期六', 'Sunday':'星期日'}
+    if (not date) or date == str(pd.to_datetime('today').date()):
+        week_day = time.strftime('%A', time.localtime())
+    else:
+        week_day = pd.to_datetime(date).day_name()
+    return week_day_dict[week_day]
+
+def Show_Weather():
+    '''展示天气情况'''
+    global date
+    condition, temp, humidity = ReadData.ReadWeather(date)
+    weekday = Each_Weekday(date)
+    inner_temp = ReadData.ReadInnerTemperature(PhoneNum, password, date)
+    card(
+        title= weekday+' '+condition,
+        text=['温度：'+str(temp)+'℃\n湿度：'+str(humidity)+'%', '室内温度：'+str(inner_temp)+'℃'],
+        image= ReadData.image2base64('Pictures/clouds.jpg'),
+        # 和container一样宽
+        styles={
+            'card':{
+                'width':'100%',
+                'height':'100%',
+                # 'margin-top':'-20%',
+                # 'margin-bottom':'-20%'
+                # 去除margin
+                'margin':'0px',
+            },
+            'filter':{
+                'background':'rgba(0,0,0,0.4)'
+            }
+
+        }
+    )
 
 if __name__=='__main__':
     st.title('用电情况总览')
@@ -192,18 +229,16 @@ if __name__=='__main__':
     # 全局变量
     date = None
 
-    time1,time2,time3 = 0,0,0
     with st.container(height=530, border=True):
         col1, col2 = st.columns([8, 2])
         with col1:
             power_curve()
         with col2:
+            Show_Weather()
             start_and_end()
             Energy_Sum()
             st.write('这边似乎应该有点什么东西，但我还没想到......')
 
-    st.write('数据读取时间：', time2-time1)
-    st.write('画图：', time3-time2)
 
 
 
