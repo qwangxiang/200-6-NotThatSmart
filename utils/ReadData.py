@@ -5,11 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import streamlit as st
+from Globals import TIME_INTERVAL
 
 import os,time
  
-os.environ['TZ'] = 'Asia/Shanghai'
-time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
+# os.environ['TZ'] = 'Asia/Shanghai'
+# time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
 
 
 def str2timestamp(str_time:str, time_format:str='%Y-%m-%d %H:%M:%S')->int:
@@ -39,7 +40,7 @@ def login(PhoneNum:str, Password:str)->str:
     response = requests.post(url, headers=headers, json=data)
     return eval(response.text)['token']
 
-# @st.cache_data
+@st.cache_data(ttl=TIME_INTERVAL*60)
 def ReadData_Day(beeId:str, mac:str, time:str, PhoneNum:str, password:str, DataType:str='P')->pd.DataFrame:
     '''
     查询某个设备某天的数据，需要指定网关和设备的mac，以及提供登陆的手机号和密码
@@ -91,8 +92,8 @@ def ReadData_Day(beeId:str, mac:str, time:str, PhoneNum:str, password:str, DataT
         print('未查询到有效数据，已返回空表。')
         return pd.DataFrame(columns=['TimeStamp', DataType])
 
-@st.cache_data
-def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=15, DataType:str='P'):
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTERVAL, DataType:str='P'):
     '''
     将时间间隔转化为指定的时间间隔
     '''

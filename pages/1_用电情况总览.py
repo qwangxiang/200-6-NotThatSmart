@@ -6,10 +6,11 @@ from pyecharts import options as opts
 import time
 import numpy as np
 import pandas as pd
+from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 
 st.set_page_config(layout='wide')
 
-@st.cache_data
+@st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):
     data_raw.rename(columns={datatype:datatype+'_Raw'}, inplace=True)
     dataset = pd.concat([df[['Time', datatype]].set_index('Time'), data_raw[['Time', datatype+'_Raw']].set_index('Time')], axis=1).sort_index().reset_index()
@@ -23,7 +24,7 @@ def power_curve():
     '''
     用电曲线
     '''
-    global date
+    global date, time1, time2, time3
 
     clo1, col2, col3 = st.columns([0.5, 0.3, 0.2])
     with clo1:
@@ -35,11 +36,13 @@ def power_curve():
     if DataType=='功率':
         with col3:
             show_raw_data = st.toggle('显示原始数据', False, help='是否显示原始数据，若为“是”，则可能减慢运行速度。')
+    time1 = time.time()
     df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
     data_raw = df.copy()
     DataType = 'P' if DataType=='功率' else 'Energy'
     if DataType=='P':
-        df = ReadData.TimeIntervalTransform(df, date, time_interval=15, DataType=DataType)
+        df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType=DataType)
+        time2 = time.time()
         if show_raw_data:
             dataset = Form_Dataset(df, data_raw, DataType)
             figure = (
@@ -91,7 +94,7 @@ def power_curve():
                 )
             )
     else:
-        energy = ReadData.TimeIntervalTransform(df, date, time_interval=15, DataType='P2Energy')
+        energy = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P2Energy')
         # 画柱形图
         x_axis = [i[-8:] for i in energy['Time'].tolist()]
         figure = (
@@ -117,7 +120,9 @@ def power_curve():
             )
         )
     st_echarts(figure, height=400)
+    time3 = time.time()
 
+@st.cache_data(ttl=TIME_INTERVAL*60)
 def find_change_point(data):
     # 这里默认是96个点
     length = data.shape[0]
@@ -141,7 +146,7 @@ def start_and_end():
     global date
 
     df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
-    df = ReadData.TimeIntervalTransform(df, date, time_interval=15, DataType='P')
+    df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P')
     data = df['P'].to_numpy()
     time_list = [str(i)[-8:] for i in df['Time'].tolist()]
     start_index = find_change_point(data)
@@ -150,36 +155,36 @@ def start_and_end():
     st.success('用电开始时间：'+time_list[start_index])
     st.warning('用电结束时间：'+time_list[end_index])
 
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Calculate_Energy_Sum(date):
+    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
+    energy = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P2Energy')
+    energy_sum = energy['Energy'].sum()
+    # 获取date上一天的用电量
+    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=str(pd.to_datetime(date)-pd.Timedelta(days=1)).split()[0], PhoneNum=PhoneNum, password=password, DataType='P')
+    energy = ReadData.TimeIntervalTransform(df, str(pd.to_datetime(date)-pd.Timedelta(days=1)).split()[0], time_interval=TIME_INTERVAL, DataType='P2Energy')
+    energy_sum_yesterday = energy['Energy'].sum()
+    return energy_sum, energy_sum_yesterday
+
 def Energy_Sum():
     '''
     日用电量
     '''
     global date
-
-    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
-    energy = ReadData.TimeIntervalTransform(df, date, time_interval=15, DataType='P2Energy')
-    energy_sum = energy['Energy'].sum()
-    # 获取date上一天的用电量
-    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=str(pd.to_datetime(date)-pd.Timedelta(days=1)).split()[0], PhoneNum=PhoneNum, password=password, DataType='P')
-    energy = ReadData.TimeIntervalTransform(df, str(pd.to_datetime(date)-pd.Timedelta(days=1)).split()[0], time_interval=15, DataType='P2Energy')
-    energy_sum_yesterday = energy['Energy'].sum()
-
+    energy_sum, energy_sum_yesterday = Calculate_Energy_Sum(date)
     st.metric(label='日用电量', value=str(round(energy_sum,2))+' kWh', delta=str(round(energy_sum-energy_sum_yesterday,2))+' kWh', delta_color='normal' if energy_sum-energy_sum_yesterday>0 else 'inverse')
-
-
 
 
 if __name__=='__main__':
     st.title('用电情况总览')
 
     # 用户信息
-    PhoneNum = '15528932507'
-    password = '123456'
+    PhoneNum = PHONE_NUM
+    password = PASSWORD
     BeeID = '86200001187'
     mac = 'Mt3-M1-84f703120b64'
 
     # 其他参数
-    time_interval = 15
     change_lower = 400
     change_upper = 500
     num_points = 2
@@ -187,6 +192,7 @@ if __name__=='__main__':
     # 全局变量
     date = None
 
+    time1,time2,time3 = 0,0,0
     with st.container(height=530, border=True):
         col1, col2 = st.columns([8, 2])
         with col1:
@@ -196,6 +202,8 @@ if __name__=='__main__':
             Energy_Sum()
             st.write('这边似乎应该有点什么东西，但我还没想到......')
 
+    st.write('数据读取时间：', time2-time1)
+    st.write('画图：', time3-time2)
 
 
 
