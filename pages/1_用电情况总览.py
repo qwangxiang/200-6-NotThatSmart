@@ -1,4 +1,4 @@
-from utils import ReadData
+from utils import ReadData, IndexCalculator
 import streamlit as st
 from streamlit_echarts import st_pyecharts as st_echarts
 from pyecharts.charts import Bar,Line,HeatMap,Pie
@@ -27,7 +27,7 @@ def power_curve():
     用电曲线
     '''
     global date
-    height = containe1_height-140
+    height = containe1_height-240
 
     clo1, col2, col3 = st.columns([0.5, 0.3, 0.2])
     with clo1:
@@ -235,9 +235,149 @@ def Show_Peak_Prop():
             ],
             legend_opts=opts.LegendOpts(pos_left="right", orient="vertical")
         )
-        # .set_series_opts(label_opts={"formatter": "{b}"})
+        .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
     )
     st_echarts(figure, height=250, width=250)
+
+def ShowPeakAndValley():
+    '''
+    峰谷情况展示
+    '''
+    global date
+    peak, peak_time, valley, peak_valley_diff = IndexCalculator.PeaKAndValley(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
+    peak,valley,peak_valley_diff = round(peak/1000,2), round(valley/1000,2), round(peak_valley_diff/1000,2)
+    card(
+        title='峰：'+str(peak)+'kW，谷：'+str(valley)+'kW',
+        text=['峰值时间：'+peak_time+'峰谷差：'+str(peak_valley_diff)+'kW'],
+        image= ReadData.image2base64('Pictures/FDEBAA.png'),
+        styles={
+            'card':{
+                'width':'100%',
+                'height':'100%',
+                # 'margin-top':'-20%',
+                # 'margin-bottom':'-20%'
+                # 去除margin
+                'margin':'0px',
+            },
+            'text':{
+                'color':'white',
+                'font-size':'15px'
+            },
+            'title':{
+                'color':'white',
+                'font-size':'18px'
+            },
+            'filter':{
+                'background':'rgba(0,0,0,0.4)'
+            }
+
+        }
+    )
+
+def ShowVariability():
+    '''
+    负荷波动性
+    '''
+    global date
+    variability = IndexCalculator.Varibility(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
+    variability = round(variability/1000,2)
+    card(
+        title='负荷波动性',
+        text=[str(variability),'   '],
+        image= ReadData.image2base64('Pictures/ABD1BC.png'),
+        styles={
+            'card':{
+                'width':'100%',
+                'height':'100%',
+                # 'margin-top':'-20%',
+                # 'margin-bottom':'-20%'
+                # 去除margin
+                'margin':'0px',
+            },
+            'text':{
+                'color':'white',
+                'font-size':'15px'
+            },
+            'title':{
+                'color':'white',
+                'font-size':'18px'
+            },
+            'filter':{
+                'background':'rgba(0,0,0,0.4)'
+            }
+
+        }
+    )  
+
+def ShowLoadFactor():
+    '''
+    负荷因子
+    '''
+    global date
+    load_factor = IndexCalculator.LoadFactor(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
+    load_factor = round(load_factor,2)
+    card(
+        title='负荷因子',
+        text=[str(load_factor),'   '],
+        image= ReadData.image2base64('Pictures/BED0F9.png'),
+        styles={
+            'card':{
+                'width':'100%',
+                'height':'100%',
+                # 'margin-top':'-20%',
+                # 'margin-bottom':'-20%'
+                # 去除margin
+                'margin':'0px',
+            },
+            'text':{
+                'color':'white',
+                'font-size':'15px'
+            },
+            'title':{
+                'color':'white',
+                'font-size':'18px'
+            },
+            'filter':{
+                'background':'rgba(0,0,0,0.4)'
+            }
+
+        }
+    )
+
+def ShowRisingEdgeAndFallingEdge():
+    '''
+    最大上升沿和最大下降沿
+    '''
+    global date
+    rising_edge, rising_edge_time, falling_edge, falling_edge_time = IndexCalculator.RisingEdgeAndFallingEdge(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
+    rising_edge, falling_edge = round(rising_edge/1000,2), round(falling_edge/1000,2)
+    card(
+        title='',
+        text=['最大上升功率：'+str(rising_edge)+'kW   时间：'+rising_edge_time, '最大下降功率：'+str(falling_edge)+'kW   时间：'+falling_edge_time],
+        image= ReadData.image2base64('Pictures/E3BBED.png'),
+        styles={
+            'card':{
+                'width':'100%',
+                'height':'100%',
+                # 'margin-top':'-20%',
+                # 'margin-bottom':'-20%'
+                # 去除margin
+                'margin':'0px',
+            },
+            'text':{
+                'color':'white',
+                'font-size':'15px'
+            },
+            'title':{
+                'color':'white',
+                'font-size':'18px'
+            },
+            'filter':{
+                'background':'rgba(0,0,0,0.4)'
+            }
+
+        }
+    )
 
 if __name__=='__main__':
     st.title('用电情况总览')
@@ -247,10 +387,9 @@ if __name__=='__main__':
     password = PASSWORD
     BeeID = '86200001187'
     mac = 'Mt3-M1-84f703120b64'
-    containe1_height = 700
+    containe1_height = 800
 
     # 其他参数
-    
     
 
     # 全局变量
@@ -265,8 +404,22 @@ if __name__=='__main__':
             start_and_end()
             Energy_Sum()
             Show_Peak_Prop()
+        col1,col2,col3,coll4 = st.columns([1.5,1.5,1,1])
+        with col1:
+            ShowPeakAndValley()
+        with col2:
+            ShowRisingEdgeAndFallingEdge()
+            
+            pass
+        with col3:
+            ShowLoadFactor()
+            pass
+        with coll4:
+            ShowVariability()
+            pass
+
     if Calculate_Peak_Valley_Prop(date)[0]/(Calculate_Peak_Valley_Prop(date)[0]+Calculate_Peak_Valley_Prop(date)[1])<0.7:
-        st.warning('高峰用电占比过少，请检查用电情况！')
+        st.warning('高峰用电占比过少，请注意检查用电情况。')
 
 
 

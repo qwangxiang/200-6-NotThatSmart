@@ -11,11 +11,10 @@ if __name__ == '__main__':
     st.markdown("<h1 style='text-align: center;'>200-6简易数据分析</h1>", unsafe_allow_html=True)
     st.balloons()
 
-    mac = 'Irc-M1-7cdfa1b89d38'
-    time = '2024-12-22'
-    df = ReadData.ReadData_Day(beeId='86200001289', mac=mac, time=time, PhoneNum='15528932507', password='123456', DataType='Temperature')
-
-    print(df)
+    card(
+        title='标摊',
+        text='标摊是什么？',
+    )
 
 
 
