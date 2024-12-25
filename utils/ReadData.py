@@ -10,8 +10,8 @@ import base64
 
 import os,time
  
-# os.environ['TZ'] = 'Asia/Shanghai'
-# time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
+os.environ['TZ'] = 'Asia/Shanghai'
+time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
 
 
 def str2timestamp(str_time:str, time_format:str='%Y-%m-%d %H:%M:%S')->int:
