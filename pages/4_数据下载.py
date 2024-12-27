@@ -23,9 +23,14 @@ if __name__ == '__main__':
     # if st.button('下载数据'):
     df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum='15528932507', password='123456', DataType=DataType)
 
-    col1,col2,col3 = st.columns([0.4,0.2,0.4])
+    col1,col2,col3,col4 = st.columns([0.25,0.25,0.25,0.25])
     with col2:
+        with open('DeviceInfo.txt', 'rb') as f:
+            data = f.read()
+        st.download_button(label='mac文件', data=data, file_name='DeviceInfo.txt', mime='text/plain')
+    with col3:
         st.download_button(label='下载数据', data=df.to_csv(encoding='utf-8-sig'), file_name='data.csv', mime='text/csv')
+            
     # 下载按钮居中
     
 
