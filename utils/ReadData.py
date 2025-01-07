@@ -237,27 +237,16 @@ def Each_Weekday(date:str=None):
     return week_day_dict[week_day]
 
 if __name__ == '__main__':
-    # phone_num = '15528932507'
-    # password = '123456'
-    # BeeID = '86200001289'
-    # BeeID2 = '86200001187'
-    # mac = 'Sck-M1-7cdfa1b85f04'
-    # time = '2024-12-22'
-    # people_detector = 'Irs-M1-7cdfa1b85e28'
-    # all_mac = 'Mt3-M1-84f703120b64'
+    phone_num = '15528932507'
+    password = '123456'
+    date = '2025-01-07'
+    mac = 'Sck-M1-7cdfa1b89c00'
 
-    # df = ReadData_Day(beeId=BeeID2, mac=all_mac, time=time, PhoneNum=phone_num, password=password, DataType='P')
-    # print(df)
+    df = ReadData_Day(beeId='86200001289', mac='Irc-M1-7cdfa1b89d38', time=date, PhoneNum=phone_num, password=password, DataType='P')
+    df.plot(x='Time', y='P')
 
-    # df = TimeIntervalTransform(df, time, time_interval=15, DataType='P')
-    # print(df[40:])
-
-    # plt.show()
-    # # print(type(df['TimeStamp'][0]))
-
-    date = '2024-12-22'
-    condition, temp, humidity = ReadWeather(date)
-    print(condition, temp, humidity)
+    plt.show()
+    pass
 
 
 
