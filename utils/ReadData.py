@@ -236,17 +236,21 @@ def Each_Weekday(date:str=None):
         week_day = pd.to_datetime(date).day_name()
     return week_day_dict[week_day]
 
-@st.cache_data(ttl=TIME_INTERVAL*60)
-def ReadData_RealTime(BeeId:str, mac:str, PhoneNum:str, password:str, DataType:str='P'):
-    '''
-    获取某设备的实时用电数据
-    '''    
-    date = str(datetime.datetime.now().date())
-    df = ReadData_Day(beeId=BeeId, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType=DataType)
-    if df.empty:
-        return 0.00
-    return round(df[DataType].iloc[-1],2)
 
+def ReadData_RealTime(beeId:str, PhoneNum:str, password:str, DataType:str='P'):
+    '''
+    查询某个网关下所有设备的实时功率
+    '''
+    url = f'http://test.beepower.com.cn:30083/api/mqtt/v1?beeId={beeId}&methodType=query3&phone={PhoneNum}'
+    token = login(PhoneNum, password)
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {token}'
+    }
+    data = 'state.'+DataType
+    response = requests.post(url, headers=headers, data=data)
+    text = eval(response.text)['state.'+DataType]
+    return text
 
 if __name__ == '__main__':
     phone_num = '15528932507'
