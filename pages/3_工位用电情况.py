@@ -218,7 +218,7 @@ def EndTime(data:list, time_list:list):
     card(
         title='用电结束时间',
         text=end_time,
-        image= ReadData.image2base64('Pictures/e29135.png'),
+        image= ReadData.image2base64('Pictures/E29135.png'),
         styles={
             'card':{
                 'width':'100%',
