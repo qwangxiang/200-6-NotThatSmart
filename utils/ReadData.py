@@ -130,7 +130,7 @@ def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTE
                 temp_timetsamp = temp['TimeStamp'].to_numpy()
                 temp_P = temp['P'].to_numpy()
                 temp_energy = np.trapezoid(temp_P, temp_timetsamp)+temp_P[0]*(temp_timetsamp[0]-timestamp_list[i])+temp_P[-1]*(timestamp_list[i]+time_interval*60-temp_timetsamp[-1])
-                data.append(temp_energy/(time_interval*60))
+                data.append(round(temp_energy/(time_interval*60),2))
         data = pd.Series(data)
         # 对data进行处理，如果data中有nan，则采用线性插值
         if date == str(datetime.datetime.now().date()):
@@ -208,20 +208,20 @@ def ReadInnerTemperature(PhoneNum:str, Password:str, date:str=None):
         df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')
         return df['Temperature'].iloc[-1]
 @st.cache_data(ttl=TIME_INTERVAL*60)
-def find_change_point(data):
+def find_change_point(data, change_lower=CHANGE_LOWER, change_upper=CHANGE_UPPER, num_points=NUM_POINTS):
     # 这里默认是96个点
     length = data.shape[0]
     # 求差分
     diff = np.diff(data)
-    for i in range(length-NUM_POINTS-1):
+    for i in range(length-num_points-1):
         if_point = True
-        for j in range(NUM_POINTS):
-            if abs(diff[i+j])>CHANGE_LOWER:
+        for j in range(num_points):
+            if abs(diff[i+j])>change_lower:
                 if_point = False
-        if diff[i+NUM_POINTS]<CHANGE_UPPER:
+        if diff[i+num_points]<change_upper:
             if_point = False
         if if_point:
-            return i+NUM_POINTS
+            return i+num_points
     return 0
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
@@ -235,6 +235,18 @@ def Each_Weekday(date:str=None):
     else:
         week_day = pd.to_datetime(date).day_name()
     return week_day_dict[week_day]
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def ReadData_RealTime(BeeId:str, mac:str, PhoneNum:str, password:str, DataType:str='P'):
+    '''
+    获取某设备的实时用电数据
+    '''    
+    date = str(datetime.datetime.now().date())
+    df = ReadData_Day(beeId=BeeId, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType=DataType)
+    if df.empty:
+        return 0.00
+    return round(df[DataType].iloc[-1],2)
+
 
 if __name__ == '__main__':
     phone_num = '15528932507'
