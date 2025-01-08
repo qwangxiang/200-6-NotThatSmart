@@ -46,8 +46,7 @@ def Get_WorkStation_RealTime()->list:
     res = np.zeros((7, 3))
     for i in range(0, 21):
         for j in range(3):
-            res[i//3,i%3] += text[workstation_lib[i+1][j]] if text[workstation_lib[i+1][j]] in text else 0
-            res[i//3, i%3] += ReadData.ReadData_RealTime(BeeId='86200001289', mac=workstation_lib[i+1][j], PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
+            res[i//3,i%3] += text[workstation_lib[i+1][j]] if workstation_lib[i+1][j] in text else 0
     res = np.round(res, 2)
     return [[i, j, res[i, j]] for i in range(7) for j in range(3)]
 def RealTime_Overview():
