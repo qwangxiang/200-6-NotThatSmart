@@ -2,7 +2,7 @@ import streamlit as st
 from utils import ReadData
 
 
-if __name__ == '__main__':
+if __name__ == '__page__':
     st.title('数据下载')
 
     # 选择网关

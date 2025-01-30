@@ -10,8 +10,8 @@ import base64
 
 import os,time
  
-os.environ['TZ'] = 'Asia/Shanghai'
-time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
+# os.environ['TZ'] = 'Asia/Shanghai'
+# time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
 
 
 def str2timestamp(str_time:str, time_format:str='%Y-%m-%d %H:%M:%S')->int:
@@ -65,6 +65,7 @@ def ReadData_Day(beeId:str, mac:str, time:str, PhoneNum:str, password:str, DataT
         x[DataType] = float(x[DataType])*1.0
 
     time = time+'~'+timestamp2str(str2timestamp(time+' 00:00:00', '%Y-%m-%d %H:%M:%S')+86400)[0:10]
+    # 2024 01-07~2024-01-08
     url = f'http://test.beepower.com.cn:30083/api/mqtt/v1?beeId={beeId}&methodType=query3&phone={PhoneNum}'
 
     token = login(PhoneNum, password)
@@ -91,7 +92,7 @@ def ReadData_Day(beeId:str, mac:str, time:str, PhoneNum:str, password:str, DataT
         return df
     else:
         print('未查询到有效数据，已返回空表。')
-        return pd.DataFrame(columns=['TimeStamp', DataType])
+        return pd.DataFrame(columns=['TimeStamp', 'Time', DataType])
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTERVAL, DataType:str='P'):
@@ -258,7 +259,7 @@ if __name__ == '__main__':
     date = '2025-01-07'
     mac = 'Sck-M1-7cdfa1b89c00'
 
-    df = ReadData_Day(beeId='86200001289', mac='Irc-M1-7cdfa1b89d38', time=date, PhoneNum=phone_num, password=password, DataType='P')
+    df = ReadData_Day(beeId='86200001289', mac='SckM17cdfa1b89c00', time=date, PhoneNum=phone_num, password=password, DataType='P')
     df.plot(x='Time', y='P')
 
     plt.show()

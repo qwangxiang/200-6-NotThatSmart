@@ -10,7 +10,6 @@ from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 from streamlit_extras.card import card
 import base64
 
-st.set_page_config(layout='wide')
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):
@@ -359,9 +358,6 @@ def ShowRisingEdgeAndFallingEdge():
             'card':{
                 'width':'100%',
                 'height':'100%',
-                # 'margin-top':'-20%',
-                # 'margin-bottom':'-20%'
-                # 去除margin
                 'margin':'0px',
             },
             'text':{
@@ -375,12 +371,11 @@ def ShowRisingEdgeAndFallingEdge():
             'filter':{
                 'background':'rgba(0,0,0,0.4)'
             }
-
         }
     )
 
-if __name__=='__main__':
-    st.title('用电情况总览')
+if __name__=='__page__':
+    st.title('用电总览')
 
     # 用户信息
     PhoneNum = PHONE_NUM

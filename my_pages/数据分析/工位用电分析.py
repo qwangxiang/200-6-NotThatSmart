@@ -1,16 +1,12 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
 from streamlit_extras.card import card
+from streamlit_echarts import st_pyecharts as st_echarts
+from pyecharts.charts import Line
+from pyecharts import options as opts
 from utils import ReadData
 from Globals import PHONE_NUM, PASSWORD, TIME_INTERVAL
-import numpy as np
-from streamlit_echarts import st_pyecharts as st_echarts
-from pyecharts.charts import HeatMap, Line
-from pyecharts import options as opts
-import datetime
-import pandas as pd
-
-# 使用宽布局
-st.set_page_config(layout='wide')
 
 workstation_lib = {
     'beeTd': '86200001289',
@@ -37,99 +33,6 @@ workstation_lib = {
     21: ['Sck-M1-7cdfa1b951a8', 'Sck-M1-84f703122cf0', 'Sck-M1-84f70311f3bc']
 }
 
-@st.cache_data(ttl=TIME_INTERVAL*60)
-def Get_WorkStation_RealTime()->list:
-    '''
-    获取每个工位的实施功率
-    '''
-    text = ReadData.ReadData_RealTime(beeId=workstation_lib['beeTd'], PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
-    res = np.zeros((7, 3))
-    for i in range(0, 21):
-        for j in range(3):
-            res[i//3,i%3] += text[workstation_lib[i+1][j]] if workstation_lib[i+1][j] in text else 0
-    res = np.round(res, 2)
-    return [[i, j, res[i, j]] for i in range(7) for j in range(3)]
-def RealTime_Overview():
-    '''
-    实时用电概览
-    '''
-    global container_height
-
-    data = Get_WorkStation_RealTime()
-    figure = (
-        HeatMap(init_opts=opts.InitOpts(width='1000px', height='1000px'))
-        .add_xaxis([i for i in range(7)])
-        .add_yaxis('工位功率', [i for i in range(3)], data)
-
-        .set_global_opts(
-            visualmap_opts=opts.VisualMapOpts(min_=0, max_=100),
-            title_opts=opts.TitleOpts(title='工位用电情况'),
-            xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(is_show=False)),
-            yaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(is_show=False)),
-        )
-
-        .set_series_opts(
-            itemstyle_opts=opts.ItemStyleOpts(border_color='white', border_width=5, border_radius=10),
-        )
-    )
-    st_echarts(figure, height=container_height-220, width='100%')
-    pass
-def RealTime_Overview_Side():
-    '''
-    实时用电概览侧边栏
-    '''
-    data = np.array(Get_WorkStation_RealTime())[:,-1]
-    col1,col2,col3 = st.columns([1, 1, 1])
-    with col1:
-        card(
-            title='实时最大功率',
-            text=str(np.max(data))+'W',
-            image= ReadData.image2base64('Pictures/D63344.png'),
-            styles={
-                'card':{
-                    'width':'100%',
-                    'height':'80%',
-                    'margin':'0px',
-                },
-                'filter':{
-                    'background':'rgba(0,0,0,0.4)'
-                }
-
-            }
-        )
-    with col2:
-        card(
-            title='实时最小功率',
-            text=str(np.min(data))+'W',
-            image= ReadData.image2base64('Pictures/3AB744.png'),
-            styles={
-                'card':{
-                    'width':'100%',
-                    'height':'80%',
-                    'margin':'0px',
-                },
-                'filter':{
-                    'background':'rgba(0,0,0,0.4)'
-                }
-            }
-        )
-    with col3:
-        card(
-            title='实时平均功率',
-            text=str(round(np.mean(data),2))+'W',
-            image= ReadData.image2base64('Pictures/3EABF6.png'),
-            styles={
-                'card':{
-                    'width':'100%',
-                    'height':'80%',
-                    'margin':'0px',
-                },
-                'filter':{
-                    'background':'rgba(0,0,0,0.4)'
-                }
-            }
-        )
-    pass
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):
     data_raw.rename(columns={datatype:datatype+'_Raw'}, inplace=True)
@@ -350,19 +253,14 @@ def ShowWorkStation(index:int):
     with col4_:
         EndTime(data, time_list)
 
-
-    pass
-
-if __name__ == '__main__':
-    st.title('工位用电情况')
+if __name__ == '__page__':
+    st.title('工位用电分析')
 
     container_height = 700
 
     with st.container(border=True, height=container_height):
-        select = st.selectbox('查看对象', ['实时总览']+['工位'+str(i) for i in range(1, 22)])
-        if select == '实时总览':
-            RealTime_Overview()
-            RealTime_Overview_Side()
-        else:
-            ShowWorkStation(int(select[2:]))
+        workstation_index = st.selectbox('选择工位', ['工位'+str(i) for i in range(1, 22)])
+        ShowWorkStation(int(workstation_index[2:]))
+
+
 

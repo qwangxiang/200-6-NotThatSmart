@@ -1,17 +1,7 @@
 import streamlit as st
 
-
-if __name__ == '__main__':
-    st.title('聊天')
+if __name__ == '__page__':
     st.write('功能开发中......')
-
-
-
-
-
-
-
-
 
 
 

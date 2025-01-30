@@ -128,7 +128,7 @@ def ShowDeviceUse():
     pass
 
 
-if __name__ == '__main__':
+if __name__ == '__page__':
 
     # 账户信息
     PhoneNum = PHONE_NUM
@@ -177,7 +177,6 @@ if __name__ == '__main__':
 
     date = None
 
-    st.set_page_config(layout='wide')
     st.title('设备用电分析')
     with st.container(border=True):
         ShowDeviceUse()
