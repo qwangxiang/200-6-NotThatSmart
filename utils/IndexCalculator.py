@@ -30,8 +30,13 @@ def Varibility(beeId:str, mac:str, date:str, PhoneNum:str, Password:str):
         float: 负荷波动性指标，即标准差
     '''
     df = ReadData.ReadData_Day(beeId=beeId, mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='P')
-    df = ReadData.TimeIntervalTransform(df, date=date, time_interval=TIME_INTERVAL)
-    return np.std(df['P'])
+    if df.empty:
+        return 0.
+    else:
+        data = df['P'].to_numpy()
+        diff = np.abs(np.diff(data))
+        return np.mean(diff), np.max(diff), np.min(diff)
+
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def LoadFactor(beeId:str, mac:str, date:str, PhoneNum:str, Password:str):

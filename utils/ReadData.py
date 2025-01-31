@@ -10,8 +10,8 @@ import base64
 
 import os,time
  
-# os.environ['TZ'] = 'Asia/Shanghai'
-# time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
+os.environ['TZ'] = 'Asia/Shanghai'
+time.tzset() #Python time tzset() 根据环境变量TZ重新初始化时间相关设置。
 
 
 def str2timestamp(str_time:str, time_format:str='%Y-%m-%d %H:%M:%S')->int:
@@ -173,6 +173,7 @@ def ReadWeather(date:str=None):
         湿度
     '''
     if (not date) or date == str(datetime.datetime.now().date()):
+        # 如果没有指定日期，则返回当天的天气
         url = 'https://api.weatherapi.com/v1/current.json?key=4ac8a9797998437d985122700242412&q=ShangHai/MinHang&aqi=no'
         response = requests.get(url)
         # 加载成字典
@@ -180,6 +181,7 @@ def ReadWeather(date:str=None):
         # 返回天气和温度
         return data['current']['condition']['text'],data['current']['temp_c'],data['current']['humidity']
     else:
+        # 如果指定了日期，则返回指定日期的天气
         url = 'https://api.weatherapi.com/v1/history.json?key=4ac8a9797998437d985122700242412&q=ShangHai&dt='+date
         response = requests.get(url)
         data = response.json()
@@ -204,6 +206,8 @@ def ReadInnerTemperature(PhoneNum:str, Password:str, date:str=None):
         date = str(datetime.datetime.now().date())
         df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')
         # 返回最后一个数
+        if df.empty:
+            return 0.0
         return df['Temperature'].iloc[-1]
     else:
         df = ReadData_Day(beeId='86200001289', mac=mac, time=date, PhoneNum=PhoneNum, password=Password, DataType='Temperature')

@@ -16,6 +16,7 @@ def Form_Dataset(df, data_raw, datatype):
     data_raw.rename(columns={datatype:datatype+'_Raw'}, inplace=True)
     dataset = pd.concat([df[['Time', datatype]].set_index('Time'), data_raw[['Time', datatype+'_Raw']].set_index('Time')], axis=1).sort_index().reset_index()
     dataset['Time'] =  dataset['Time'].apply(lambda x:x[-8:])
+    # 将P_raw中的缺失数据（主要是整15分钟时候的值）填充为P对应时间点的值
     dataset[datatype+'_Raw'][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]] = dataset[datatype][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]]
     dataset1 = [['Time', 'Data', 'RawData']] + dataset.to_numpy().tolist()
     # 这里注意需要删除最后一个幽灵数据，多出一根线的原因：最后一个数据和第一个数据的横坐标一样
@@ -278,11 +279,11 @@ def ShowVariability():
     负荷波动性
     '''
     global date
-    variability = IndexCalculator.Varibility(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
-    variability = round(variability/1000,2)
+    variability_mean,variability_max,variability_min = IndexCalculator.Varibility(beeId=BeeID, mac=mac, date=date, PhoneNum=PhoneNum, Password=PASSWORD)
+    variability_mean,variability_max,variability_min = round(variability_mean,2), round(variability_max,2), round(variability_min,2)
     card(
-        title='负荷波动性',
-        text=[str(variability),'   '],
+        title='负荷波动',
+        text=[str(variability_mean)+'/'+str(variability_max)+'/'+str(variability_min)+' W'],
         image= ReadData.image2base64('Pictures/ABD1BC.png'),
         styles={
             'card':{
