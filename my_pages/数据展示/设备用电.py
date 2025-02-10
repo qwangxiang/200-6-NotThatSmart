@@ -1,5 +1,5 @@
 import streamlit as st
-from Globals import PHONE_NUM, PASSWORD
+from Globals import PHONE_NUM, PASSWORD, beeID, devices
 from utils import ReadData
 import datetime
 import numpy as np
@@ -83,7 +83,7 @@ def Printer():
     '''
     # 获取打印机今日数据
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-84f703123a18', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['打印机'], date, PhoneNum, password, 'P')
     
     if data.empty:
         st.markdown(
@@ -119,7 +119,7 @@ def Subrouter():
     子路由器卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-7cdfa1b660dc', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['华为子路由器'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -158,7 +158,7 @@ def Fridge():
     冰箱卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-7cdfa1b852e0', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['冰箱'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -195,7 +195,7 @@ def Network_Device():
     网络设备卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-7cdfa1b89d5', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['网络设备'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -232,7 +232,7 @@ def Coffee_Machine():
     咖啡机卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-84f703123c88', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['咖啡机'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -269,7 +269,7 @@ def Kettle():
     烧水壶卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-7cdfa1b89d20', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['烧水壶'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -306,7 +306,7 @@ def Microwave_Oven():
     微波炉卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day('86200001187', 'Sck-M1-84f70310ee40', date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['微波炉'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -342,10 +342,7 @@ def Microwave_Oven():
 def Show_Devices():
     '''
     展示所有的设备
-    '''
-    devices = {'beeID':'86200001187', '打印机':'Sck-M1-84f703123a18', '子路由器':'Sck-M1-7cdfa1b660dc', '冰箱':'Sck-M1-7cdfa1b852e0', '网络设备':'Sck-M1-7cdfa1b89d5', '咖啡机':'Sck-M1-84f703123c88', '烧水壶':'Sck-M1-7cdfa1b89d20', '微波炉':'Sck-M1-84f70310ee40'}
-
-    
+    '''    
     with st.container(border=True):
         col1_1,col1_2,col1_3,col1_4 = st.columns([1,1,1,1])
         with col1_1:
@@ -393,46 +390,7 @@ if __name__=='__page__':
         '微波炉':'https://img.picui.cn/free/2025/02/02/679f0992e0509.jpg',
     }
 
-    # # 其他变量
-    # beeID_lib = {
-    #     '生活区': '86200001187',
-    #     '学生办公区': '86200001289',
-    #     '办公室/会议室': '86200001290',
-    # }
-    # devices_lib = {
-    #     '生活区': {
-    #         '打印机': 'Sck-M1-84f703123a18',
-    #         '进门灯': 'Lk3-M1-7cdfa1b8a1a0',
-    #         '小会议室灯': 'Lk1-M1-7cdfa1b8640c',
-    #         '进门人体感应': 'Irs-M1-84f703112028',
-    #         '展示区人体感应': 'Irs-M1-84f703122288',
-    #         '小会议室人体感应': 'Irs-M1-84f7031218b4',
-    #         '华为子路由器': 'Sck-M1-7cdfa1b660dc',
-    #         '冰箱': 'Sck-M1-7cdfa1b852e0',
-    #         '网络设备': 'Sck-M1-7cdfa1b89d5',
-    #         # 这里实际上咖啡机和烧水壶的mac示范的
-    #         '咖啡机': 'Sck-M1-84f703123c88',
-    #         '烧水壶': 'Sck-M1-7cdfa1b89d20',
-    #         # 这个mac也是改过的
-    #         '微波炉': 'Sck-M1-84f70310ee40',
-    #     },
-    #     '学生办公区': {
-    #         '人体感应1': 'Irs-M1-7cdfa1b84cb4',
-    #         '人体感应2': 'Irs-M1-7cdfa1b85e28',
-    #     },
-    #     '办公室/会议室': {
-    #         # 这几个人感不知道为什么查不到数据
-    #         '大会议室人体感应器': 'Irs-M1-84f703101f5c',
-    #         '办公室B人体感应器': 'Irs-M1-84f70310d0f4',
-    #         '办公室B灯': 'Lk1-M1-7cdfa1b867d8',
-    #         '办公室C人体感应器': 'Irs-M1-7cdfa1b85e50',
-    #         '办公室C灯': 'Lk1-M1-7cdfa1b87b18',
-    #         '办公室C空气传感器': 'Env-lt_0004@modbus 01',
-    #         '办公室D灯': 'Lk1-M1-7cdfa1b84bc4',
-    #         '办公室D空气传感器': 'Env-lt_0001@modbus 01',
-    #         '大会议室灯': 'Lk2-M1-7cdfa1b86a10',
-    #     }
-    # }
+    
 
     # P: 打印机、子路由器、冰箱、网络设备、咖啡壶。烧水壶、微波炉
     # Induction: 进门人体感应、展示区人体感应、小会议室人体感应、人体感应1、人体感应2、大会议室人体感应器、办公室B人体感应器、办公室C人体感应器
