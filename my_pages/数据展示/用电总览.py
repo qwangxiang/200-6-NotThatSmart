@@ -10,14 +10,12 @@ from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 from streamlit_extras.card import card
 import base64
 
-
-@st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):
     data_raw.rename(columns={datatype:datatype+'_Raw'}, inplace=True)
     dataset = pd.concat([df[['Time', datatype]].set_index('Time'), data_raw[['Time', datatype+'_Raw']].set_index('Time')], axis=1).sort_index().reset_index()
     dataset['Time'] =  dataset['Time'].apply(lambda x:x[-8:])
     # 将P_raw中的缺失数据（主要是整15分钟时候的值）填充为P对应时间点的值
-    dataset[datatype+'_Raw'][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]] = dataset[datatype][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]]
+    # dataset[datatype+'_Raw'][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]] = dataset[datatype][np.where(dataset[datatype+'_Raw'].isna().to_numpy())[0]]
     dataset1 = [['Time', 'Data', 'RawData']] + dataset.to_numpy().tolist()
     # 这里注意需要删除最后一个幽灵数据，多出一根线的原因：最后一个数据和第一个数据的横坐标一样
     return dataset1[:-1]

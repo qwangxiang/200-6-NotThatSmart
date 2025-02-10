@@ -69,7 +69,8 @@ def RealTime_Overview():
             itemstyle_opts=opts.ItemStyleOpts(border_color='white', border_width=5, border_radius=10),
         )
     )
-    st_echarts(figure, height=container_height-220, width='100%')
+    if 'figure' in locals():
+        st_echarts(figure, height=container_height-220, width='100%')
     pass
 def RealTime_Overview_Side():
     '''

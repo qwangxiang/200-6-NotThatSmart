@@ -111,7 +111,7 @@ def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTE
     if df.empty:
         df = pd.DataFrame(columns=['TimeStamp', DataType])
         df['TimeStamp'] = timestamp_list
-        df['P' if DataType=='P' else 'Energy'] = [0 for i in range(len(timestamp_list))]
+        df[DataType] = [0 for i in range(len(timestamp_list))]
         df['Time'] = time_list
         return df
     
@@ -125,8 +125,6 @@ def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTE
             if temp.empty:
                 data.append(np.nan)
             else:
-                # 使用算数平均值
-                # data.append(temp['P'].mean())
                 # 使用积分平均值
                 temp_timetsamp = temp['TimeStamp'].to_numpy()
                 temp_P = temp['P'].to_numpy()
@@ -154,6 +152,24 @@ def TimeIntervalTransform(df:pd.DataFrame, date:str, time_interval:int=TIME_INTE
             else:
                 data.append(temp['Energy'].max()-temp['Energy'].min())
         df_temp['Energy'] = np.round(data, 2)
+    else:
+        data = []
+        for i in range(len(timestamp_list)):
+            temp = df[(df['TimeStamp']>=timestamp_list[i]) & (df['TimeStamp']<=timestamp_list[i]+time_interval*60)]
+            if temp.empty:
+                data.append(0)
+            else:
+                temp_timetsamp = temp['TimeStamp'].to_numpy()
+                temp_data = temp[DataType].to_numpy()
+                temp_energy = np.trapezoid(temp_data, temp_timetsamp)+temp_data[0]*(temp_timetsamp[0]-timestamp_list[i])+temp_data[-1]*(timestamp_list[i]+time_interval*60-temp_timetsamp[-1])
+                data.append(round(temp_energy/(time_interval*60),2))
+        data = pd.Series(data)
+        if date == str(datetime.datetime.now().date()):
+            data.interpolate(inplace=True, limit_direction='backward', method='linear')
+            data.fillna(0, inplace=True)
+        else:
+            data.interpolate(inplace=True, limit_direction='both', method='linear')
+        df_temp[DataType] = np.round(data.to_numpy(), 2)
     return df_temp
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
