@@ -1,5 +1,5 @@
 import streamlit as st
-from Globals import PHONE_NUM, PASSWORD, beeID, devices
+from Globals import PHONE_NUM, PASSWORD, beeID, devices, Inductions, TIME_INTERVAL
 from utils import ReadData
 import datetime
 import numpy as np
@@ -12,6 +12,7 @@ def Def_CSS():
     st.markdown(
         """
         <style>
+        /* 卡片CSS */
         .card {
             position: relative;
             display: flex;
@@ -71,6 +72,59 @@ def Def_CSS():
             font-size: 1vw;
             font-weight: bold;
             text-align: center; /* 居中对齐 */
+        }
+
+
+        /* Induction_Button */
+        .induction-button {
+            position: absolute;
+            width: 1vw; /* 半径大小和父组件的宽度成比例 */
+            height: 1vw; /* 半径大小和父组件的宽度成比例 */
+            border-radius: 50%; /* 圆形 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 3;
+        }
+
+        .induction-button:hover {
+            transform: scale(1.1); /* 鼠标悬浮时放大 */
+        }
+
+        .induction-button:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            top: 50%; /* 调整位置 */
+            left: 110%;
+            transform: translateY(-50%);
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 0.5vw;
+            border-radius: 0.5vw;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-family: 'KaiTi', serif; /* 楷体 */
+            font-size: 1vw; /* 字号和组件半径成比例 */
+            white-space: nowrap; /* 使对话框横向显示 */
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateY(-50%);
+            border-width: 0.5vw;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
         }
         </style>
         """,
@@ -360,21 +414,81 @@ def Show_Devices():
             Kettle()
         with col2_3:
             Microwave_Oven()
-        
+
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Single_Induction(name:str):
+    '''
+    展示单个人体传感器的状态，其中：
+    0---离线---灰色
+    1---无人---红色
+    2---有人---绿色
+    '''
+    color = {
+        0:'gray',
+        1:'red',
+        2:'green'
+    }
+    date = str(datetime.datetime.now().date())
+    data = ReadData.ReadData_Day(Inductions[name]['beeID'], Inductions[name]['mac'], date, PhoneNum, password, 'Induction')
+    res = name+'<br>状态：'
+    if data.empty:
+        status = 0
+        res += '离线'
+    else:
+        status = data['Induction'].to_numpy()[-1]+1
+        res += '有人' if status==2 else '无人'
+        res += ' 时间：'+data['Time'].to_numpy()[-1][-8:]
+
+    return color[status], res
+
 def Show_Induction():
     '''
     展示所有的人体感应器
     '''
-    Inductoions = {'生活区':'86200001187', '进门人体感应':'Irs-M1-84f703112028', '展示区人体感应':'Irs-M1-84f703122288', '小会议室人体感应':'Irs-M1-84f7031218b4', '人体感应1':'Irs-M1-7cdfa1b84cb4', '人体感应2':'Irs-M1-7cdfa1b85e28', '大会议室人体感应器':'Irs-M1-84f703101f5c', '办公室B人体感应器':'Irs-M1-84f70310d0f4', '办公室C人体感应器':'Irs-M1-7cdfa1b85e50'}
+    names = list(Inductions.keys())
+
+    st.markdown(
+        f"""
+        <div style="display: flex; justify-content: center;">
+            <div class="card" style="width: 85%; padding-bottom: 43%; position: relative; transition: none; box-shadow: none; transform: none;">
+                <img src="https://img.picui.cn/free/2025/02/10/67a9be749980e.png" style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; border-radius: 0.0vw;">
+                <div class="induction-button" style="background-color: {Single_Induction(names[0])[0]}; top: 50%; left: 14%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[0])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[1])[0]}; top: 15%; left: 14%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[1])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[2])[0]}; top: 80%; left: 16%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[2])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[3])[0]}; top: 88%; left: 30%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[3])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[4])[0]}; top: 88%; left: 65%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[4])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[5])[0]}; top: 88%; left: 83%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[5])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[6])[0]}; top: 50%; left: 80%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[6])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[7])[0]}; top: 16%; left: 62%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[7])[1]}</span>
+                </div>
+                <div class="induction-button" style="background-color: {Single_Induction(names[8])[0]}; top: 55%; left: 62%; transform: translate(-50%, -50%);">
+                    <span class="tooltip">{Single_Induction(names[8])[1]}</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     pass
 
-def Show_Air_Condition():
-    '''
-    展示所有的空调
-    '''
-    with st.container(border=True):
-        
-        pass
+
 
 if __name__=='__page__':
     # 账户信息
@@ -401,13 +515,10 @@ if __name__=='__page__':
     # 定义CSS样式
     Def_CSS()
 
-    tab1,tab2,tab3 = st.tabs(['设备', '空调', '人体感应器'])
+    tab1,tab2 = st.tabs(['设备', '人体感应器'])
 
     with tab1:
         Show_Devices()
     with tab2:
-        pass
-    with tab3:
-        pass
-
+        Show_Induction()
 
