@@ -254,8 +254,11 @@ def ReadData_RealTime(beeId:str, PhoneNum:str, password:str, DataType:str='P'):
     }
     data = 'state.'+DataType
     response = requests.post(url, headers=headers, data=data)
-    text = eval(response.text)['state.'+DataType]
-    return text
+    text = eval(response.text)
+    if f'state.{DataType}' in text.keys():
+        return text[f'state.{DataType}']
+    else:
+        return None
 
 if __name__ == '__main__':
     phone_num = '15528932507'
