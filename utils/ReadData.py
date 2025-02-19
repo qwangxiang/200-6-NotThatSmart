@@ -75,7 +75,9 @@ def ReadData_Day(beeId:str, mac:str, time:str, PhoneNum:str, password:str, DataT
     }
     data = f'curve.{mac}.{DataType}:{time}'
     response = requests.post(url, headers=headers, data=data)
-    text = eval(response.text)
+    # text = eval(response.text)
+    # 把eval函数换成了json函数，观察后期会不会报错
+    text = response.json()
     if f'curve.{mac}.{DataType}:{time}' in text.keys():
         data = text[f'curve.{mac}.{DataType}:{time}']
         # 把数据转化为dataframe，第一列是时间，第二列是数据

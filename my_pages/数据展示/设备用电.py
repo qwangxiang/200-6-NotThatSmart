@@ -1,5 +1,5 @@
 import streamlit as st
-from Globals import PHONE_NUM, PASSWORD, beeID, devices, Inductions, TIME_INTERVAL
+from Globals import PHONE_NUM, PASSWORD, beeID, devices, Inductions, TIME_INTERVAL, devices_lib
 from utils import ReadData
 import datetime
 import numpy as np
@@ -137,7 +137,7 @@ def Printer():
     '''
     # 获取打印机今日数据
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['打印机'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['打印机']['beeID'], devices_lib['打印机']['mac'], date, PhoneNum, password, 'P')
     
     if data.empty:
         st.markdown(
@@ -173,7 +173,7 @@ def Subrouter():
     子路由器卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['华为子路由器'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['子路由器']['beeID'], devices_lib['子路由器']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -212,7 +212,7 @@ def Fridge():
     冰箱卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['冰箱'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['冰箱']['beeID'], devices_lib['冰箱']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -249,7 +249,7 @@ def Network_Device():
     网络设备卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['网络设备'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['网络设备']['beeID'], devices_lib['网络设备']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -286,7 +286,7 @@ def Coffee_Machine():
     咖啡机卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['咖啡机'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['咖啡机']['beeID'], devices_lib['咖啡机']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -323,7 +323,7 @@ def Kettle():
     烧水壶卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['烧水壶'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['烧水壶']['beeID'], devices_lib['烧水壶']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -360,7 +360,7 @@ def Microwave_Oven():
     微波炉卡片
     '''
     date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(beeID['生活区'], devices['生活区']['微波炉'], date, PhoneNum, password, 'P')
+    data = ReadData.ReadData_Day(devices_lib['微波炉']['beeID'], devices_lib['微波炉']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
             f"""
@@ -501,7 +501,7 @@ if __name__=='__page__':
         '网络设备':'https://img.picui.cn/free/2025/02/02/679f02f7560ac.jpg',
         '咖啡机':'https://img.picui.cn/free/2025/02/02/679f05e5ddcb3.jpg',
         '烧水壶':'https://img.picui.cn/free/2025/02/02/679f08ddf2959.jpg',
-        '微波炉':'https://img.picui.cn/free/2025/02/02/679f0992e0509.jpg',
+        '微波炉':'https://img.picui.cn/free/2025/02/19/67b543978b55d.jpg',
     }
 
     st.title('设备用电')
