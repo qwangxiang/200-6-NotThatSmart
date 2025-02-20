@@ -105,7 +105,8 @@ def Curve_Display():
             )
         else:
             st.write('目前仅支持在完整曲线模式下查看数据。')
-        st_echarts(figure, height=height-130)
+        if 'figure' in locals():
+            st_echarts(figure, height=height-130)
     with col2:
         if dataset:
             dataset = pd.DataFrame(dataset[1:], columns=dataset[0])
@@ -175,18 +176,6 @@ def Curve_Display():
                 """,
                 unsafe_allow_html=True
             )
-
-    
-
-    # 测试区
-    # col1_,col2_,col3_ = st.columns([1,1,1])
-    # with col1_:
-    #     st.write(PA_raw)
-    # with col2_:
-    #     st.write(PB_raw)
-    # with col3_:
-    #     st.write(PC_raw)
-    # st.write(dataset)
 
 if __name__ == '__page__':
     # 参数

@@ -1,5 +1,5 @@
 import streamlit as st
-from Globals import PHONE_NUM, PASSWORD, beeID, devices, Inductions, TIME_INTERVAL, devices_lib
+from Globals import PHONE_NUM, PASSWORD, Inductions, TIME_INTERVAL, devices_lib
 from utils import ReadData
 import datetime
 import numpy as np
@@ -131,12 +131,11 @@ def Def_CSS():
         unsafe_allow_html=True
     )
 
-def Printer():
+def Printer(date):
     '''
     打印机卡片
     '''
     # 获取打印机今日数据
-    date = str(datetime.datetime.now().date())
     data = ReadData.ReadData_Day(devices_lib['打印机']['beeID'], devices_lib['打印机']['mac'], date, PhoneNum, password, 'P')
     
     if data.empty:
@@ -168,50 +167,10 @@ def Printer():
             unsafe_allow_html=True
         )
 
-def Subrouter():
-    '''
-    子路由器卡片
-    '''
-    date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(devices_lib['子路由器']['beeID'], devices_lib['子路由器']['mac'], date, PhoneNum, password, 'P')
-    if data.empty:
-        st.markdown(
-            f"""
-            <div class="card grayscale" style="background-image: url('{links['子路由器']}');">
-                <div class="device-name">子路由器</div>
-                <div class="content" style="display: flex; justify-content: center; align-items: center; height: 100%;">
-                    <div class="device-status" style="text-align: center; font-size: 18px; color: red; font-weight: bold;">设备离线...</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    else:
-        time = data['TimeStamp'].to_numpy()
-        data = data['P'].to_numpy()
-        realtime_power = round(data[-1],2)
-        data_diff = np.diff(data)
-        color = 'red' if data_diff[-1]>0 else 'green'
-        # 积分算出今日用电量
-        power_use_today = round(np.trapezoid(data, time)/1000/3600,2)
-
-
-        st.markdown(
-            f"""
-            <div class="card" style="background-image: url('{links['子路由器']}');">
-                <div class="device-name">子路由器</div>
-                <div class="device-power">实时功率 <br> <span style="color: {color};">{realtime_power} W</span> <br> 今日用电量 <br> {power_use_today} kWh </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    pass
-
-def Fridge():
+def Fridge(date):
     '''
     冰箱卡片
     '''
-    date = str(datetime.datetime.now().date())
     data = ReadData.ReadData_Day(devices_lib['冰箱']['beeID'], devices_lib['冰箱']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
@@ -244,11 +203,10 @@ def Fridge():
             unsafe_allow_html=True
         )
 
-def Network_Device():
+def Network_Device(date):
     '''
     网络设备卡片
     '''
-    date = str(datetime.datetime.now().date())
     data = ReadData.ReadData_Day(devices_lib['网络设备']['beeID'], devices_lib['网络设备']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
@@ -281,11 +239,10 @@ def Network_Device():
             unsafe_allow_html=True
         )
 
-def Coffee_Machine():
+def Coffee_Machine(date):
     '''
     咖啡机卡片
     '''
-    date = str(datetime.datetime.now().date())
     data = ReadData.ReadData_Day(devices_lib['咖啡机']['beeID'], devices_lib['咖啡机']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
@@ -318,48 +275,10 @@ def Coffee_Machine():
             unsafe_allow_html=True
         )
 
-def Kettle():
-    '''
-    烧水壶卡片
-    '''
-    date = str(datetime.datetime.now().date())
-    data = ReadData.ReadData_Day(devices_lib['烧水壶']['beeID'], devices_lib['烧水壶']['mac'], date, PhoneNum, password, 'P')
-    if data.empty:
-        st.markdown(
-            f"""
-            <div class="card grayscale" style="background-image: url('{links['烧水壶']}');">
-                <div class="device-name">烧水壶</div>
-                <div class="content" style="display: flex; justify-content: center; align-items: center; height: 100%;">
-                    <div class="device-status" style="text-align: center; font-size: 18px; color: red; font-weight: bold;">设备离线...</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    else:
-        time = data['TimeStamp'].to_numpy()
-        data = data['P'].to_numpy()
-        realtime_power = round(data[-1],2)
-        data_diff = np.diff(data)
-        color = 'red' if data_diff[-1]>0 else 'green'
-        # 积分算出今日用电量
-        power_use_today = round(np.trapezoid(data, time)/1000/3600,2)
-
-        st.markdown(
-            f"""
-            <div class="card" style="background-image: url('{links['烧水壶']}');">
-                <div class="device-name">烧水壶</div>
-                <div class="device-power">实时功率 <br> <span style="color: {color};">{realtime_power} W</span> <br> 今日用电量 <br> {power_use_today} kWh </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-def Microwave_Oven():
+def Microwave_Oven(date):
     '''
     微波炉卡片
     '''
-    date = str(datetime.datetime.now().date())
     data = ReadData.ReadData_Day(devices_lib['微波炉']['beeID'], devices_lib['微波炉']['mac'], date, PhoneNum, password, 'P')
     if data.empty:
         st.markdown(
@@ -392,29 +311,102 @@ def Microwave_Oven():
             unsafe_allow_html=True
         )
 
+def Display_1(date):
+    '''
+    展示区电视卡片
+    '''
+    data = ReadData.ReadData_Day(devices_lib['展示区电视']['beeID'], devices_lib['展示区电视']['mac'], date, PhoneNum, password, 'P')
+    if data.empty:
+        st.markdown(
+            f"""
+            <div class="card grayscale" style="background-image: url('{links['展示区电视']}');">
+                <div class="device-name">展示区电视</div>
+                <div class="content" style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <div class="device-status" style="text-align: center; font-size: 18px; color: red; font-weight: bold;">设备离线...</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        time = data['TimeStamp'].to_numpy()
+        data = data['P'].to_numpy()
+        realtime_power = round(data[-1],2)
+        data_diff = np.diff(data)
+        color = 'red' if data_diff[-1]>0 else 'green'
+        # 积分算出今日用电量
+        power_use_today = round(np.trapezoid(data, time)/1000/3600,2)
+
+        st.markdown(
+            f"""
+            <div class="card" style="background-image: url('{links['展示区电视']}');">
+                <div class="device-name">展示区电视</div>
+                <div class="device-power">实时功率 <br> <span style="color: {color};">{realtime_power} W</span> <br> 今日用电量 <br> {power_use_today} kWh </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+def Display_2(date):
+    '''
+    大会议室电视卡片
+    '''
+    data = ReadData.ReadData_Day(devices_lib['大会议室电视']['beeID'], devices_lib['大会议室电视']['mac'], date, PhoneNum, password, 'P')
+    if data.empty:
+        st.markdown(
+            f"""
+            <div class="card grayscale" style="background-image: url('{links['大会议室电视']}');">
+                <div class="device-name">大会议室电视</div>
+                <div class="content" style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                    <div class="device-status" style="text-align: center; font-size: 18px; color: red; font-weight: bold;">设备离线...</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        time = data['TimeStamp'].to_numpy()
+        data = data['P'].to_numpy()
+        realtime_power = round(data[-1],2)
+        data_diff = np.diff(data)
+        color = 'red' if data_diff[-1]>0 else 'green'
+        # 积分算出今日用电量
+        power_use_today = round(np.trapezoid(data, time)/1000/3600,2)
+
+        st.markdown(
+            f"""
+            <div class="card" style="background-image: url('{links['大会议室电视']}');">
+                <div class="device-name">大会议室电视</div>
+                <div class="device-power">实时功率 <br> <span style="color: {color};">{realtime_power} W</span> <br> 今日用电量 <br> {power_use_today} kWh </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
 
 def Show_Devices():
     '''
     展示所有的设备
     '''    
+    date = str(datetime.datetime.now().date())
     with st.container(border=True):
         col1_1,col1_2,col1_3,col1_4 = st.columns([1,1,1,1])
         with col1_1:
-            Printer()
+            Printer(date)
         with col1_2:
-            Subrouter()
+            Display_1(date)
         with col1_3:
-            Fridge()
+            Fridge(date)
         with col1_4:
-            Network_Device()
+            Network_Device(date)
         col2_1,col2_2,col2_3 = st.columns([1,1,1])
         with col2_1:
-            Coffee_Machine()
+            Coffee_Machine(date)
         with col2_2:
-            Kettle()
+            Microwave_Oven(date)
         with col2_3:
-            Microwave_Oven()
-
+            Display_2(date)
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Single_Induction(name:str):
@@ -496,12 +488,12 @@ if __name__=='__page__':
     password = PASSWORD
     links = {
         'Printer':'https://img.picui.cn/free/2025/02/02/679efa44cbd6b.jpg',
-        '子路由器':'https://img.picui.cn/free/2025/02/02/679f00d6b5783.jpg',
         '冰箱':'https://img.picui.cn/free/2025/02/02/679f01d0ae73f.jpg',
         '网络设备':'https://img.picui.cn/free/2025/02/02/679f02f7560ac.jpg',
         '咖啡机':'https://img.picui.cn/free/2025/02/02/679f05e5ddcb3.jpg',
-        '烧水壶':'https://img.picui.cn/free/2025/02/02/679f08ddf2959.jpg',
         '微波炉':'https://img.picui.cn/free/2025/02/19/67b543978b55d.jpg',
+        '大会议室电视':'https://img.picui.cn/free/2025/02/20/67b6915dc5849.jpg',
+        '展示区电视':'https://img.picui.cn/free/2025/02/20/67b6925dcc60d.jpg'
     }
 
     st.title('设备用电')

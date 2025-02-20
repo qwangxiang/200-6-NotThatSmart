@@ -1,6 +1,6 @@
 import streamlit as st
 from utils import ReadData
-from Globals import PHONE_NUM, PASSWORD, TIME_INTERVAL, beeID, devices_lib, devices
+from Globals import PHONE_NUM, PASSWORD, TIME_INTERVAL, devices_lib
 import pandas as pd
 import matplotlib.pyplot as plt
 from pyecharts import options as opts
@@ -27,7 +27,7 @@ def ShowDeviceUse():
         date = str(st.date_input('选择日期', value='today', min_value=None, max_value=None, key=None))
     with col2:
         # 选择设备
-        device_name = st.selectbox('选择设备', list(devices_lib.keys()))
+        device_name = st.selectbox('选择设备', list(devices_lib.keys()), index=1)
     if device_name == '空调':
         suffix = {
             '外机':'2',
@@ -152,8 +152,6 @@ def ShowDeviceUse():
                     )
     if 'figure' in locals():
         st_echarts(figure, height=500)
-    pass
-
 
 if __name__ == '__page__':
 
