@@ -44,7 +44,7 @@ def RealTime_Overview():
         .add_yaxis('工位功率', [i for i in range(3)], data)
 
         .set_global_opts(
-            visualmap_opts=opts.VisualMapOpts(min_=0, max_=100),
+            visualmap_opts=opts.VisualMapOpts(min_=0, max_=150),
             title_opts=opts.TitleOpts(title='工位用电情况'),
             xaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(is_show=False)),
             yaxis_opts=opts.AxisOpts(axislabel_opts=opts.LabelOpts(is_show=False)),

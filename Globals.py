@@ -57,8 +57,8 @@ Inductions = {
 # 设备档案
 devices_lib = {
     '空调':{
-        'beeID': '86200001289',
-        'mac': 'Asm-M1-58cf790d4cc0'
+        'beeID': '86200001187',
+        'mac': 'Asm-M1-ecda3bd7ff00'
     },
     '打印机':{
         'beeID': '86200001187',
