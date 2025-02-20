@@ -6,10 +6,9 @@ if __name__ == '__page__':
     st.title('数据下载')
 
     # 选择网关
-    gateway = st.selectbox('选择网关', ['生活区/进门区', '办公室/会议室', '学生办公区'])
-    gateway_dict = {'生活区/进门区': '86200001187', '办公室/会议室': '86200001183', '学生办公区': '86200001289'}
-    BeeID = gateway_dict[gateway]
+    beeID = st.select_box('选择网关', ['86200001187', '86200001183', '86200001289'])
 
+    # 选择设备
     mac = st.text_input('输入mac地址', 'Mt3-M1-84f703120b64')
 
     # 选择日期
@@ -21,7 +20,7 @@ if __name__ == '__page__':
     DataType = DataType_dict[DataType]
 
     # if st.button('下载数据'):
-    df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum='15528932507', password='123456', DataType=DataType)
+    df = ReadData.ReadData_Day(beeId=beeID, mac=mac, time=date, PhoneNum='15528932507', password='123456', DataType=DataType)
 
     col1,col2,col3,col4 = st.columns([0.25,0.25,0.25,0.25])
     with col2:
