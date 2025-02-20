@@ -183,7 +183,9 @@ workstation_lib = {
     },
     23:{
         'beeID': '86200001187',
-        'mac': ['Sck-M1-9c9e6e159ff8', 'Sck-M1-9c9e6e17bf74']
+        # 'mac': ['Sck-M1-9c9e6e159ff8', 'Sck-M1-9c9e6e17bf74']
+        # 这里是由于使用者取电的原因，暂时用这个mac地址
+        'mac': ['Sck-M1-9c9e6e159da4', 'Sck-M1-9c9e6e17bf74']
     },
     24:{
         'beeID': '86200001187',
