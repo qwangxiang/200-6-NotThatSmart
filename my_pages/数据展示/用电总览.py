@@ -8,7 +8,9 @@ import numpy as np
 import pandas as pd
 from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 from streamlit_extras.card import card
-import base64
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
 def Form_Dataset(df, data_raw, datatype):
     data_raw.rename(columns={datatype:datatype+'_Raw'}, inplace=True)

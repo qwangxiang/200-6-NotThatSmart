@@ -7,6 +7,9 @@ from pyecharts import options as opts
 from pyecharts.charts import Line
 from streamlit_echarts import st_pyecharts as st_echarts
 import numpy as np
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):

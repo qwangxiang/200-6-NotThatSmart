@@ -4,6 +4,10 @@ from utils import ReadData
 import datetime
 import numpy as np
 
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
+
 def Def_CSS():
     '''
     定义CSS样式

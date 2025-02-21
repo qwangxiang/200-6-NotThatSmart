@@ -8,6 +8,9 @@ from pyecharts import options as opts
 from utils import ReadData
 from Globals import PHONE_NUM, PASSWORD, TIME_INTERVAL, workstation_lib
 
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Form_Dataset(df, data_raw, datatype):

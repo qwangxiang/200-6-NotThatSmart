@@ -6,7 +6,11 @@ from pyecharts.charts import Line
 from pyecharts import options as opts
 from streamlit_echarts import st_pyecharts as st_echarts
 import numpy as np
+from Globals import TIME_INTERVAL
 
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
 def Calculate_Parameters(dataset:pd.DataFrame, DataType:str):
     # 最大值

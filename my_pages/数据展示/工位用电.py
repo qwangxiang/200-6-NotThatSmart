@@ -6,8 +6,10 @@ import numpy as np
 from streamlit_echarts import st_pyecharts as st_echarts
 from pyecharts.charts import HeatMap, Line
 from pyecharts import options as opts
-import datetime
-import pandas as pd
+
+from streamlit_autorefresh import st_autorefresh
+
+st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Get_WorkStation_RealTime()->list:
