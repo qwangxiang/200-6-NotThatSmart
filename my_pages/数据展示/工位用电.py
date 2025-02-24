@@ -11,35 +11,13 @@ from streamlit_autorefresh import st_autorefresh
 
 st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
-@st.cache_data(ttl=TIME_INTERVAL*60)
-def Get_WorkStation_RealTime()->list:
-    '''
-    获取每个工位的实施功率，现在是针对24个工位的版本
-    '''
-    text_1 = ReadData.ReadData_RealTime(beeId='86200001289', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
-    text_2 = ReadData.ReadData_RealTime(beeId='86200001187', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
-    # 合并两个字典->>这里是因为两个text中有key是一样的，所以不能直接合并
-    # text = {**text_1, **text_2}
-    # st.write(text)
-    res = np.zeros((8, 3))
-    for i in range(3, 24):
-        for j in range(3):
-            res[i//3,i%3] += text_1[workstation_lib[i-2]['mac'][j]] if workstation_lib[i-2]['mac'][j] in text_1 else 0.0
-            res[i//3,i%3] += text_2[workstation_lib[i-2]['mac'][j]] if workstation_lib[i-2]['mac'][j] in text_2 else 0.0
-    # 三个额外的工位只有两个插座1，且编号是22-24
-    for i in range(0,3):
-        for j in range(2):
-            res[0,i] += text_1[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_1 else 0.0
-            res[0,i] += text_2[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_2 else 0.0
-    res = np.round(res, 2)
-    return [[i, j, res[i, j]] for i in range(8) for j in range(3)]
 def RealTime_Overview():
     '''
     实时用电概览
     '''
     global container_height
 
-    data = Get_WorkStation_RealTime()
+    data = ReadData.Get_WorkStation_RealTime()
     figure = (
         HeatMap(init_opts=opts.InitOpts(width='1000px', height='1000px'))
         .add_xaxis([i for i in range(8)])
@@ -63,7 +41,7 @@ def RealTime_Overview_Side():
     '''
     实时用电概览侧边栏
     '''
-    data = np.array(Get_WorkStation_RealTime())
+    data = np.array(ReadData.Get_WorkStation_RealTime())[:,-1]
     col1,col2,col3 = st.columns([1, 1, 1])
     with col1:
         card(

@@ -9,6 +9,7 @@ import pandas as pd
 from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 from streamlit_extras.card import card
 from streamlit_autorefresh import st_autorefresh
+from streamlit_option_menu import option_menu
 
 st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
@@ -217,7 +218,7 @@ def Show_Peak_Prop():
         .add("", [list(z) for z in data.items()], radius=["40%", "75%"])
         
         .set_global_opts(
-            title_opts={"text": "用电占比"},
+            title_opts={"text": "高峰用电占比"},
             graphic_opts=[
                 {
                     "type": "text",
@@ -238,6 +239,47 @@ def Show_Peak_Prop():
         .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
     )
     st_echarts(figure, height=250, width=250)
+
+def ShowDeviceConsumption():
+    '''
+    设备用电占比
+    '''
+    # 分为：设备用电，工位用电，空调用电
+    Data_of_workstation = np.sum(np.array(ReadData.Get_WorkStation_RealTime())[:,-1])
+    Data_of_Devices = np.sum(list(ReadData.Get_Device_RealTime().values()))
+    Data_of_AirConditioner = np.sum(list(ReadData.Get_AirConditioner_RealTime().values()))
+    # 查询总表功率
+    data_of_all = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')['P'].iloc[-1]
+    data = {'设备':round(Data_of_Devices,2), '工位':round(Data_of_workstation,2), '空调内机':round(Data_of_AirConditioner,2), '其他':round(data_of_all-Data_of_Devices-Data_of_workstation-Data_of_AirConditioner,2)}
+    # 环形图
+    figure = (
+        Pie(init_opts=opts.InitOpts(width='100px', height='100px'))
+        .add("", [list(z) for z in data.items()], radius=["40%", "75%"])
+        
+        .set_global_opts(
+            title_opts={"text": "设备用电占比"},
+            graphic_opts=[
+                {
+                    "type": "text",
+                    "left": "center",
+                    "top": "center",
+                    "style": {
+                        "text": "用电占比\n\n",
+                        "textAlign": "center",
+                        "fill": "red",
+                        "fontSize": 15,
+                        # 加粗
+                        "fontWeight": "bold",
+                    },
+                }
+            ],
+            legend_opts=opts.LegendOpts(is_show=False, pos_left="right", orient="vertical")
+        )
+        .set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+    )
+    st_echarts(figure, height=250, width=250)
+
+
 
 def ShowPeakAndValley():
     '''
@@ -383,7 +425,7 @@ if __name__=='__page__':
     password = PASSWORD
     BeeID = '86200001187'
     mac = 'Mt3-M1-84f703120b64'
-    containe1_height = 800
+    containe1_height = 830
 
     # 其他参数
     
@@ -399,7 +441,16 @@ if __name__=='__page__':
             Show_Weather()
             start_and_end()
             Energy_Sum()
-            Show_Peak_Prop()
+
+            selection = option_menu(menu_title=None, options=['高峰', '设备'], default_index=0, orientation='horizontal',styles={
+                "container": {"padding": "0!important", "background-color": "#fafafa"},
+                "nav-link": {"font-size": "12px", "padding": "0px 10px", "margin": "0px", "--hover-color": "#eee"},
+                "nav-link-selected": {"background-color": "#0099ff"},
+            })
+            if selection=='高峰':
+                Show_Peak_Prop()
+            else:
+                ShowDeviceConsumption()
         col1,col2,col3,coll4 = st.columns([1.5,1.5,1,1])
         with col1:
             ShowPeakAndValley()

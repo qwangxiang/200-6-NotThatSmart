@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import streamlit as st
-from Globals import TIME_INTERVAL, NUM_POINTS, CHANGE_LOWER, CHANGE_UPPER
+from Globals import TIME_INTERVAL, NUM_POINTS, CHANGE_LOWER, CHANGE_UPPER, PHONE_NUM, PASSWORD, workstation_lib, devices_lib
 import base64
 
 import os,time
@@ -259,7 +259,6 @@ def Each_Weekday(date:str=None):
         week_day = pd.to_datetime(date).day_name()
     return week_day_dict[week_day]
 
-
 def ReadData_RealTime(beeId:str, PhoneNum:str, password:str, DataType:str='P'):
     '''
     查询某个网关下所有设备的实时功率
@@ -277,6 +276,56 @@ def ReadData_RealTime(beeId:str, PhoneNum:str, password:str, DataType:str='P'):
         return text[f'state.{DataType}']
     else:
         return None
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Get_WorkStation_RealTime()->list:
+    '''
+    获取每个工位的实施功率，现在是针对24个工位的版本
+    '''
+    text_1 = ReadData_RealTime(beeId='86200001289', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
+    text_2 = ReadData_RealTime(beeId='86200001187', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
+    res = np.zeros((8, 3))
+    for i in range(3, 24):
+        for j in range(3):
+            res[i//3,i%3] += text_1[workstation_lib[i-2]['mac'][j]] if workstation_lib[i-2]['mac'][j] in text_1 else 0.0
+            res[i//3,i%3] += text_2[workstation_lib[i-2]['mac'][j]] if workstation_lib[i-2]['mac'][j] in text_2 else 0.0
+    # 三个额外的工位只有两个插座1，且编号是22-24
+    for i in range(0,3):
+        for j in range(2):
+            res[0,i] += text_1[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_1 else 0.0
+            res[0,i] += text_2[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_2 else 0.0
+    res = np.round(res, 2)
+    return [[i, j, res[i, j]] for i in range(8) for j in range(3)]
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Get_Device_RealTime()->dict:
+    '''获取每个设备的实时功率'''
+    res = {'打印机':0.0, '冰箱':0.0, '网络设备':0.0, '咖啡机':0.0, '微波炉':0.0, '大会议室电视':0.0, '展示区电视':0.0}
+    text_1 = ReadData_RealTime(beeId='86200001183', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
+    text_2 = ReadData_RealTime(beeId='86200001187', PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P')
+    for key in res.keys():
+        res[key] += text_1[devices_lib[key]['mac']] if devices_lib[key]['mac'] in text_1 else 0.0
+        res[key] += text_2[devices_lib[key]['mac']] if devices_lib[key]['mac'] in text_2 else 0.0
+    return res
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Get_AirConditioner_RealTime()->dict:
+    '''获取空调的实时功率'''
+    suffix = {
+        '外机':'2',
+        '内机1':'0',
+        '内机2':'1',
+        '内机3':'3',
+        '内机4':'4',
+        '内机5':'5',
+        '内机6':'6',
+    }
+    res = {'内机1':0.0, '内机2':0.0, '内机3':0.0, '内机4':0.0, '内机5':0.0, '内机6':0.0}
+    for key in res.keys():
+        data = ReadData_Day(beeId='86200001187', mac=devices_lib['空调']['mac'], time=str(datetime.datetime.now().date()), PhoneNum=PHONE_NUM, password=PASSWORD, DataType='P'+suffix[key])
+        res[key] = data['P'+suffix[key]].iloc[-1] if not data.empty else 0.0
+    return res
+
 
 if __name__ == '__main__':
     phone_num = '15528932507'
