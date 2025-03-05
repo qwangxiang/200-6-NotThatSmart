@@ -4,6 +4,9 @@ from langchain_openai import ChatOpenAI
 from Globals import API_SERVER
 import time
 from AI.BuildAgent import Link_To_LangSmith, Create_Tool_Agent
+import asyncio
+from langchain.callbacks.base import BaseCallbackHandler
+import threading
 
 def Show_message():
     '''
@@ -12,6 +15,10 @@ def Show_message():
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+
+def Colored_text(text:str, color:str):
+    return f'<span style="color:{color}">{text}</span>'
+
 
 def Chat():
     '''
@@ -22,17 +29,42 @@ def Chat():
     user_input = st.chat_input("Type something...")
     if user_input:
         # 展示用户输入
+        with st.chat_message("user"):
+            st.write(user_input)
         st.session_state.messages.append({"role": "user", "content": user_input})
-        Show_message()
-
-        # 获取模型回答
-        answer = agent_executor.invoke({'input': user_input})['output']
-
-        st.session_state.messages.append({"role": "ai", "content": answer})
-        with st.chat_message("ai"):
-            st.write(answer)
 
 
+        # 准备回答容器
+        answer_container = st.chat_message("ai")
+        
+        # 创建一个共享变量来存储回答
+        result = {"answer": None, "done": False}
+        
+        # 创建一个线程来获取模型回答
+        def get_answer():
+            result["answer"] = agent_executor.invoke({'input': user_input})['output']
+            result["done"] = True
+            
+        thread = threading.Thread(target=get_answer)
+        thread.start()
+        
+        # 在等待回答时显示动画
+        with answer_container:
+            placeholder = st.empty()
+            dots = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+            i = 0
+            while not result["done"]:
+                placeholder.markdown('*'+Colored_text('任务进行中'+dots[i], "gray")+'*', unsafe_allow_html=True)
+                time.sleep(0.2)
+                i = (i + 1) % len(dots)
+
+            placeholder.write('*'+Colored_text('任务完成!', "green")+'*', unsafe_allow_html=True)
+            # 显示最终答案
+            st.write(result["answer"])
+
+
+        st.session_state.messages.append({"role": "ai", "content": result["answer"]})
+        
 
 if __name__ == '__page__':
     # 定义使用的api服务商和模型
@@ -45,6 +77,9 @@ if __name__ == '__page__':
     # 初始化消息存储区域
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
+    # 显示历史消息
+    Show_message()
 
     # 聊天
     Chat()

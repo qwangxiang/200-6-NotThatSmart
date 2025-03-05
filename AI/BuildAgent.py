@@ -5,7 +5,7 @@ from Globals import API_SERVER
 from AI.Tools import Get_Tools
 from AI.BuildPrompt import Get_Prompt_Template
 import streamlit as st
-
+from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
 
 def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_TRACING'] = 'true'
@@ -16,14 +16,16 @@ def Link_To_LangSmith(api_server:str):
 
 def Create_Tool_Agent(api_server:str, model:str, verbose:bool=False):
     if f'agent_{api_server}_{model}_{verbose}' in st.session_state:
-        return st.session_state[f'agnet_{api_server}_{model}_{verbose}']
+        return st.session_state[f'agent_{api_server}_{model}_{verbose}']
 
     tools = Get_Tools()
     prompt_template = Get_Prompt_Template()
     llm = ChatOpenAI(
         model=model,
         api_key=API_SERVER[api_server]['API_KEY'],
-        base_url=API_SERVER[api_server]['BASE_URL']
+        base_url=API_SERVER[api_server]['BASE_URL'],
+        streaming=True,
+        callbacks=[FinalStreamingStdOutCallbackHandler()],
     )
     agent = create_tool_calling_agent(
         llm=llm,
