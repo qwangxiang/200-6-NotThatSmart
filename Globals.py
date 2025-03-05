@@ -193,6 +193,40 @@ workstation_lib = {
     },
 }
 
+# AI相关信息
+'''
+支持描述图片的模型：
+    siliconflow:
+        Qwen/Qwen2-VL-72B-Instruct
+支持Tools调用：
+    siliconflow:
+        Qwen/Qwen2.5-72B-Instruct
+        deepseek-ai/DeepSeek-V2.5(很不稳定)
+    huoshan:
+        doubao-pro-32k-241215
+'''
+API_SERVER = {
+    # aigcto 配置
+    'aigcto': {
+        'BASE_URL': 'https://api.agicto.cn/v1',
+        'API_KEY': 'sk-S3SxTamhmcKqvp2gkFpac4WoE49CjgThiBAkYvOOUocOVmHT',
+        'MODEL': ['gpt-4o-mini', 'deepseek-r1', 'deepseek-v3']
+    },
+    # SiliconFlow 配置
+    'siliconflow': {
+        'BASE_URL': 'https://api.siliconflow.cn/v1',
+        'API_KEY': 'sk-pjwdexdyienhpovpsxmhbvzlnlwzimoffkwnwnaouchjxlwx',
+        'MODEL': ['deepseek-ai/DeepSeek-R1', 'deepseek-ai/DeepSeek-V3', 'BAAI/bge-large-zh-v1.5', 'deepseek-ai/DeepSeek-R1-Distill-Qwen-32B', 'Qwen/QVQ-72B-Preview', 'deepseek-ai/DeepSeek-V2.5', 'Qwen/Qwen2-VL-72B-Instruct', 'Qwen/Qwen2.5-72B-Instruct']
+    },
+    'huoshan': {
+        'BASE_URL': 'https://ark.cn-beijing.volces.com/api/v3',
+        'API_KEY': '394aa6f7-8a75-4300-a092-c054e32f46d9',
+        'MODEL': ['doubao-1-5-pro-256k-250115', 'deepseek-r1-250120', 'deepseek-v3-241226', 'doubao-pro-32k-241215']
+    },
+    'Tavily_AI': {
+        'API_KEY' : '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'
+    }
+}
 
 
 

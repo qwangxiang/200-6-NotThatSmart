@@ -5,10 +5,6 @@ import base64
 from utils import ReadData
 import matplotlib.pyplot as plt
 
-# st.set_page_config(layout='wide')
-
-
-
 if __name__ == '__page__':
     st.title('Welcome to the 200-6-NotThatSmart Platform')
     st.write('具体内容设计中...')
