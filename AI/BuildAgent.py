@@ -5,7 +5,6 @@ from Globals import API_SERVER
 from AI.Tools import Get_Tools
 from AI.BuildPrompt import Get_Prompt_Template
 import streamlit as st
-from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
 
 def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_TRACING'] = 'true'
@@ -14,18 +13,12 @@ def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_PROJECT'] = 'LANGSMITH_PROJECT="200-6-NotThatSmart"'
     os.environ['OPENAI_API_KEY'] = API_SERVER[api_server]['API_KEY']
 
-def Create_Tool_Agent(api_server:str, model:str, verbose:bool=False):
-    if f'agent_{api_server}_{model}_{verbose}' in st.session_state:
-        return st.session_state[f'agent_{api_server}_{model}_{verbose}']
-
+def Create_Tool_Agent(api_server:str, model:str, prompt_template, verbose:bool=False):
     tools = Get_Tools()
-    prompt_template = Get_Prompt_Template()
     llm = ChatOpenAI(
         model=model,
         api_key=API_SERVER[api_server]['API_KEY'],
         base_url=API_SERVER[api_server]['BASE_URL'],
-        streaming=True,
-        callbacks=[FinalStreamingStdOutCallbackHandler()],
     )
     agent = create_tool_calling_agent(
         llm=llm,
@@ -33,7 +26,21 @@ def Create_Tool_Agent(api_server:str, model:str, verbose:bool=False):
         prompt=prompt_template,
     )
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose)
-    st.session_state[f'agent_{api_server}_{model}_{verbose}'] = agent_executor
+    return agent_executor
+
+def Get_Agent_With_History(api_server, model, current_query=None, verbose=False):
+    """创建带有历史记忆的Agent"""
+    
+    # 构建带有历史的prompt_template
+    prompt_template = Get_Prompt_Template(current_query=current_query)
+
+    agent_executor = Create_Tool_Agent(
+        api_server=api_server, 
+        model=model, 
+        prompt_template=prompt_template,
+        verbose=verbose
+    )
+    
     return agent_executor
 
 if __name__=='__main__':

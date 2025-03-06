@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from Globals import API_SERVER
 import time
-from AI.BuildAgent import Link_To_LangSmith, Create_Tool_Agent
+from AI.BuildAgent import Link_To_LangSmith, Create_Tool_Agent, Get_Agent_With_History
 import asyncio
 from langchain.callbacks.base import BaseCallbackHandler
 import threading
@@ -12,9 +12,9 @@ def Show_message():
     '''
     负责展示历史消息
     '''
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+    for message in st.session_state.chat_history:
+        with st.chat_message(message[0]):
+            st.write(message[1])
 
 def Colored_text(text:str, color:str):
     return f'<span style="color:{color}">{text}</span>'
@@ -24,14 +24,16 @@ def Chat():
     '''
     chat工作流
     '''
-    agent_executor = Create_Tool_Agent(api_server, model, verbose=False)
-
     user_input = st.chat_input("Type something...")
+
     if user_input:
+        # 创建agent
+        agent_executor = Get_Agent_With_History(api_server, model, current_query=user_input)
+
         # 展示用户输入
         with st.chat_message("user"):
             st.write(user_input)
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.chat_history.append(('user', user_input))
 
 
         # 准备回答容器
@@ -42,7 +44,7 @@ def Chat():
         
         # 创建一个线程来获取模型回答
         def get_answer():
-            result["answer"] = agent_executor.invoke({'input': user_input})['output']
+            result["answer"] = agent_executor.invoke({'current_query':user_input})['output']
             result["done"] = True
             
         thread = threading.Thread(target=get_answer)
@@ -63,9 +65,8 @@ def Chat():
             st.write(result["answer"])
 
 
-        st.session_state.messages.append({"role": "ai", "content": result["answer"]})
+        st.session_state.chat_history.append(('ai', result["answer"]))
         
-
 if __name__ == '__page__':
     # 定义使用的api服务商和模型
     api_server = 'huoshan'
@@ -75,8 +76,8 @@ if __name__ == '__page__':
     Link_To_LangSmith(api_server)
     
     # 初始化消息存储区域
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
     # 显示历史消息
     Show_message()
