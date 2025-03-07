@@ -1,43 +1,40 @@
 import streamlit as st
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from langchain_openai.chat_models import ChatOpenAI
+# from langchain_openai import OpenAIEmbeddings
+# from langchain.prompts.example_selector import SemanticSimilarityExampleSelector
+# from langchain_community.vectorstores import Chroma
 from Globals import API_SERVER
 
 
 # 预定义示例，每个示例是一个(user_query, ai_response)对
-EXAMPLES = [
-    ('帮我查询打印机的信息', 
-     '这里所指的信息应该是设备的beeID和mac，由于相关的设备信息没有存储在我的记忆中，我应该注意用户定义的工具中有没有类似的工具，调用类似的工具完成任务。'),
-    ('帮我查询冰箱今天的功率序列', 
-     '用户让我帮他查询冰箱的用电序列，首先我应该调用日期构造工具，构造指定日的日期字符串，比如今天就应该传入today，然后调用数据查询工具，传入上述两个参数，最后将获得的功率序列返回用户。'),
-    ('今天的日期是多少？', 
-     '用户问今天的日期，我应该调用日期构造工具，传入date=today，就能获得符合格式要求的日期字符串。'),
-    ('2月12日的日期字符串', 
-     '今年是2025年，我应该调用日期构造工具，传入year=2025, date=0212，就能获得符合格式要求的日期字符串。'),
+examples_for_selection = [
+    {
+        'user': '帮我查询打印机的信息', 
+        'ai': '这里所指的信息应该是设备的beeID和mac，由于相关的设备信息没有存储在我的记忆中，我应该注意用户定义的工具中有没有类似的工具，调用类似的工具完成任务。'
+    },
+    {
+        'user': '帮我查询冰箱今天的功率序列', 
+        'ai': '用户让我帮他查询冰箱的用电序列，首先我应该调用日期构造工具，构造指定日的日期字符串，比如今天就应该传入today，然后调用数据查询工具，传入上述两个参数，最后将获得的功率序列返回用户。'
+    },
+    {
+        'user': '今天的日期是多少？', 
+        'ai': '用户问今天的日期，我应该调用日期构造工具，传入date=today，就能获得符合格式要求的日期字符串。'
+    },
+    {
+        'user': '2月12日的日期字符串', 
+        'ai': '今年是2025年，我应该调用日期构造工具，传入year=2025, date=0212，就能获得符合格式要求的日期字符串。'
+    },
+]
+examples_fixed = [
 ]
 
-def select_relevant_examples(query, examples=EXAMPLES, top_k=100):
+
+def select_relevant_examples(query, examples=examples_for_selection, top_k=100):
     """选择与当前查询最相关的几个示例"""
-    
-    # 所有文本：当前查询 + 所有示例查询
-    # texts = [query] + [ex[0] for ex in examples]
-    
-    # # TF-IDF向量化
-    # vectorizer = TfidfVectorizer().fit(texts)
-    # vectors = vectorizer.transform(texts)
-    
-    # # 计算相似度
-    # query_vector = vectors[0:1]
-    # example_vectors = vectors[1:]
-    # similarities = cosine_similarity(query_vector, example_vectors)[0]
-    # print(similarities)
-    
-    # # 获取相似度最高的k个示例
-    # top_indices = similarities.argsort()[-top_k:][::-1]
-    # return [examples[i] for i in range(top_k)]
+    # 示例筛选暂时不缺api，后面有时间再做
     return examples
+
 
 def Get_Prompt_Template(current_query=None, max_history=10):
     """
@@ -51,13 +48,17 @@ def Get_Prompt_Template(current_query=None, max_history=10):
     chat_history = st.session_state.chat_history if 'chat_history' in st.session_state else None
     
     # 选择相关示例
+    # relevant_examples = example_selector({'user': current_query})
     relevant_examples = select_relevant_examples(current_query)
     
     # 构建示例消息
     example_messages = []
-    for user_ex, ai_ex in relevant_examples:
-        example_messages.append(('user', user_ex))
-        example_messages.append(('ai', ai_ex))
+    for chat_message in relevant_examples:
+        example_messages.append(('user', chat_message['user']))
+        example_messages.append(('ai', chat_message['ai']))
+    for chat_message in examples_fixed:
+        example_messages.append(('user', chat_message['user']))
+        example_messages.append(('ai', chat_message['ai']))
     
     # 系统消息
     system_message = (
@@ -76,6 +77,7 @@ def Get_Prompt_Template(current_query=None, max_history=10):
         1. 仅执行用户明确要求的任务，绝不主动执行未被要求的内容
         2. 确认用户请求是否需要多步骤，如不需要，只执行单一工具调用
         3. 调用工具前，确保传入的参数是严格的JSON格式，不要有其他多余的字符。
+        4. 严格区分思考过程和正式回答，使用字符串'#$&'作为回答内容的开头。
 
         确保准确跟踪工具调用之间的数据流动，并在必要时对中间结果进行处理，同时只需要完成用户要求你做的事情，不要额外完成其他内容。今年是2025年。
         """
