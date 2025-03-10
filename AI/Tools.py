@@ -3,6 +3,7 @@ from langchain_core.tools import StructuredTool
 from utils import ReadData
 import datetime
 import numpy as np
+import streamlit as st
 
 '''
 定义工具函数
@@ -41,12 +42,26 @@ Get_Device_Data_tool = StructuredTool.from_function(
     description='传入设备名称和日期，查询设备在指定日期的功率序列。'
 )
 
+# 图表工具
+def Figure_Tool(data):
+    print('-'*50)
+    print(type(data))
+    print(data)
+    print('-'*50)
+
+
+Get_Figure_tool = StructuredTool.from_function(
+    func=Figure_Tool,
+    name='图表工具',
+    description='传入数据，生成图表。'
+)
 
 def Get_Tools():
     tools = [
         Get_Device_Info_tool,
         Get_Device_Data_tool,
-        Get_Date_Str_tool
+        Get_Date_Str_tool,
+        Get_Figure_tool
     ]
     return tools
 
