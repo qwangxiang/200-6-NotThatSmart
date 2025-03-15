@@ -20,7 +20,7 @@ pages = {
     ],
 
     '交互': [
-        st.Page('my_pages/交互/Chat.py', title='Chat'),
+        # st.Page('my_pages/交互/Chat.py', title='Chat'),
         st.Page('my_pages/交互/预测.py', title='预测'),
         st.Page('my_pages/交互/数据下载.py', title='数据下载'),
     ]
