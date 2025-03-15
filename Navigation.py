@@ -28,6 +28,3 @@ pages = {
 
 st.navigation(pages, position='sidebar').run()
 
-
-
-
