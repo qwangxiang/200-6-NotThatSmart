@@ -4,7 +4,17 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from Globals import API_SERVER
 from AI.Tools import Get_Tools
 from AI.BuildPrompt import Get_Prompt_Template
+from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
+
+class StreamHandler(BaseCallbackHandler):
+    def __init__(self, container, initial_text=""):
+        self.container = container
+        self.text = initial_text
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.text += token
+        self.container.markdown(self.text)
 
 def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_TRACING'] = 'true'
@@ -13,12 +23,13 @@ def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_PROJECT'] = 'LANGSMITH_PROJECT="200-6-NotThatSmart"'
     os.environ['OPENAI_API_KEY'] = API_SERVER[api_server]['API_KEY']
 
-def Create_Tool_Agent(api_server:str, model:str, prompt_template, verbose:bool=False):
+def Create_Tool_Agent(api_server:str, model:str, prompt_template, verbose:bool=False, stream_handler=None):
     tools = Get_Tools()
     llm = ChatOpenAI(
         model=model,
         api_key=API_SERVER[api_server]['API_KEY'],
         base_url=API_SERVER[api_server]['BASE_URL'],
+        callbacks=[stream_handler]
     )
     agent = create_tool_calling_agent(
         llm=llm,
@@ -28,7 +39,7 @@ def Create_Tool_Agent(api_server:str, model:str, prompt_template, verbose:bool=F
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=verbose)
     return agent_executor
 
-def Get_Agent_With_History(api_server, model, current_query=None, verbose=False):
+def Get_Agent_With_History(api_server, model, current_query=None, verbose=False, stream_handler=None):
     """创建带有历史记忆的Agent"""
     
     # 构建带有历史的prompt_template
@@ -38,7 +49,8 @@ def Get_Agent_With_History(api_server, model, current_query=None, verbose=False)
         api_server=api_server, 
         model=model, 
         prompt_template=prompt_template,
-        verbose=verbose
+        verbose=verbose,
+        stream_handler=stream_handler
     )
     
     return agent_executor

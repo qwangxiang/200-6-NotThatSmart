@@ -39,7 +39,6 @@ def select_relevant_examples(query, examples=examples_for_selection, top_k=100):
     # 示例筛选暂时不缺api，后面有时间再做
     return examples
 
-
 def Get_Prompt_Template(current_query=None, max_history=10):
     """
     构建带有历史记忆和相关示例的提示模板
@@ -81,7 +80,6 @@ def Get_Prompt_Template(current_query=None, max_history=10):
         1. 仅执行用户明确要求的任务，绝不主动执行未被要求的内容
         2. 确认用户请求是否需要多步骤，如不需要，只执行单一工具调用
         3. 调用工具前，确保传入的参数是严格的JSON格式，不要有其他多余的字符。
-        4. 严格区分思考过程和正式回答，严格使用字符串'#$&'作为正式回答内容的开头。
 
         关于图表展示：
         1. 在为用户展示数据时，优先选择使用图表进行展示。
