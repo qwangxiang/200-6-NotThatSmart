@@ -45,6 +45,14 @@ def Chat():
         # 存储最终答案
         st.session_state.chat_history.append(('ai', answer))
 
+# 在页面上渲染html字符串的参考代码
+# with open('Figure/figure01.html', 'r', encoding="utf-8") as f:
+#         html_content = f.read()
+#     with st.container(border=True):
+#         components.html(html_content, height=500)
+
+
+
 if __name__ == '__page__':
     # 定义使用的api服务商和模型
     api_server = 'huoshan'

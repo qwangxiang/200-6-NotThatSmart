@@ -14,7 +14,7 @@ class StreamHandler(BaseCallbackHandler):
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.text += token
-        self.container.markdown(self.text)
+        self.container.markdown(self.text, unsafe_allow_html=True)
 
 def Link_To_LangSmith(api_server:str):
     os.environ['LANGSMITH_TRACING'] = 'true'

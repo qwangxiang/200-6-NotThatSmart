@@ -3,6 +3,10 @@ from langchain_core.tools import StructuredTool
 from utils import ReadData
 import datetime
 import numpy as np
+from pyecharts import options as opts
+from pyecharts.charts import Line
+from streamlit_echarts import st_pyecharts as st_echarts
+
 
 '''
 定义工具函数
@@ -42,17 +46,30 @@ Get_Device_Data_tool = StructuredTool.from_function(
 )
 
 # 图表工具
-def Figure_Tool(data):
-    print('-'*50)
-    print(type(data))
-    print(data)
-    print('-'*50)
+def Figure_Tool(data:str):
+    '''
+    画图工具
+    '''
+    def str_to_list(s):
+        return [float(x) for x in s.strip('[]').split()]
+    data = str_to_list(data)
+
+    figure = (
+        Line()
+        .add_xaxis(list(range(len(data))))
+        .add_yaxis('功率', data)
+        .set_global_opts(title_opts=opts.TitleOpts(title='功率序列'))
+    )
+    st_echarts(figure)
+    # 以字符串形式返回figure的html代码
+    return figure.render_embed()
+
 
 
 Get_Figure_tool = StructuredTool.from_function(
     func=Figure_Tool,
     name='图表工具',
-    description='传入数据，生成图表。'
+    description='根据传入的数据画出对应的echarts图表，并以字符串的格式返回图表的html代码。'
 )
 
 def Get_Tools():
