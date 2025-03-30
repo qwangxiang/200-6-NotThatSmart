@@ -38,12 +38,21 @@ def Chat():
         
         with answer_container:
             stream_handler = StreamHandler(st.empty())
+            # 创建一个占位符
+            placeholder = st.empty()
 
         agent_executor = Get_Agent_With_History(api_server, model, current_query=user_input, stream_handler=stream_handler)
         answer = agent_executor.invoke({'current_query':user_input})['output']
 
+        # 处理答案形成最终答案
+        # 提取<figure>标签中的内容
+        # answer = answer.split('<figure>')[0]+answer.split('</figure>')[-1]
+    
+
         # 存储最终答案
         st.session_state.chat_history.append(('ai', answer))
+        # 重新加载页面但是不刷新session_state
+        st.rerun(scope='app')
 
 # 在页面上渲染html字符串的参考代码
 # with open('Figure/figure01.html', 'r', encoding="utf-8") as f:

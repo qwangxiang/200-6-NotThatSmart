@@ -60,7 +60,6 @@ def Figure_Tool(data:str):
         .add_yaxis('功率', data)
         .set_global_opts(title_opts=opts.TitleOpts(title='功率序列'))
     )
-    st_echarts(figure)
     # 以字符串形式返回figure的html代码
     return figure.render_embed()
 
