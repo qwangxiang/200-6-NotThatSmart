@@ -1,20 +1,7 @@
 import streamlit as st
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
-from Globals import API_SERVER
-import time
 from AI.BuildAgent import Link_To_LangSmith, Create_Tool_Agent, Get_Agent_With_History, StreamHandler
-import asyncio
-import threading
-from streamlit.runtime.scriptrunner import add_script_run_ctx
+from AI.Lib import Show_message
 
-def Show_message():
-    '''
-    负责展示历史消息
-    '''
-    for message in st.session_state.chat_history:
-        with st.chat_message(message[0]):
-            st.write(message[1])
 
 def Colored_text(text:str, color:str):
     return f'<span style="color:{color}">{text}</span>'
@@ -41,7 +28,7 @@ def Chat():
             # 创建一个占位符
             placeholder = st.empty()
 
-        agent_executor = Get_Agent_With_History(api_server, model, current_query=user_input, stream_handler=stream_handler)
+        agent_executor = Get_Agent_With_History(api_server, model, current_query=user_input, stream_handler=stream_handler, AgentType='Chat')
         answer = agent_executor.invoke({'current_query':user_input})['output']
 
         # 处理答案形成最终答案
@@ -77,7 +64,7 @@ if __name__ == '__page__':
         st.session_state.chat_history = []
 
     # 显示历史消息
-    Show_message()
+    Show_message(history_flag='chat_history')
 
     # 聊天
     Chat()

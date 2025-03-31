@@ -39,9 +39,131 @@ def select_relevant_examples(query, examples=examples_for_selection, top_k=100):
     # 示例筛选暂时不缺api，后面有时间再做
     return examples
 
-def Get_Prompt_Template(current_query=None, max_history=10):
+def Get_Prompt_Template(current_query, max_history=10, Type='Chat', history_flag='chat_history'):
+    if Type == 'Chat':
+        prompt_template = Get_Prompt_Template_Chat(current_query=current_query, max_history=max_history)
+    elif Type == 'SideBar':
+        prompt_template = Get_Prompt_Template_SideBar(current_query, history_flag=history_flag)
+    return prompt_template
+
+def Get_CurrentQuery_SideBar(current_query:dict):
+    '''
+    根据当前页面的内容生成当前的query
+
+    Parameters:
+    ---
+    current_query: dict
+        name: 当前页面的名称
+        data: 待分析的数据
+
+    Returns:
+    ---
+    current_query: str
+    '''
+    # 用电总览页面的SideBarAI
+    if current_query['name'] == '用电总览':
+        query = f"这个是整个实验室的用电数据：{current_query['Data']}，对应的时间点序列是{current_query['Time']}，数据类型是{current_query['DataType']},"+'{current_query}。'
+
+    return query
+
+def Get_Prompt_Template_SideBar(current_query, history_flag):
+    '''
+    构建用于侧边栏AI的提示模板
+
+    Parameters:
+    ---
+    history_flag: 历史对话列表，每项为(role, content)
+    
+    Returns:
+    ---
+    prompt_template: 提示模板对象
+    '''
+
+    max_history = 10
+
+    # 系统消息
+    system_message = (
+        'system',
+        """
+        你是实验室用电数据的专业分析助手，负责对当前页面展示的用电数据进行自动化分析，当前页面的数据内容会由下面一条用户消息提供给你。你的主要任务是提供简洁、专业的数据洞察，无需用户详细指令即可工作。
+
+        分析重点:
+        1. 用电曲线趋势分析：识别上升/下降趋势、周期性模式、峰谷分布
+        2. 异常检测：发现用电异常点，判断是否存在设备故障或非正常工作
+        3. 能效评估：评估能源使用效率，提出优化建议
+        4. 用电负荷特征：识别基础负荷、波动负荷，判断设备使用模式
+        5. 与历史数据比较：与过去同期数据对比，发现长期变化
+
+        输出规范:
+        1. 保持分析简洁（不超过3-5个关键观察点）
+        2. 使用专业但易懂的语言
+        3. 当发现异常情况时，明确标识并提供可能的原因
+        4. 以要点形式呈现，便于快速阅读
+        5. 如有可能，提供数据支持的具体建议
+
+        注意事项:
+        1. 你只需分析当前页面展示的数据，不需处理用户的其他查询
+        2. 分析应适应当前上下文（当前页面是设备级还是实验室级数据）
+        3. 不要询问用户更多信息，根据可见数据直接给出最佳分析
+        4. 如果数据不足以得出确定结论，坦率指出并给出基于有限信息的初步分析
+        5. 你只需要对提供黑泥的数据按照你的知识库进行分析即可，不需要调用工具之类的操作，如果没有读取到有效数据，你可以直接在回答中指出这一点
+        6. 注意将数据的变化和人的行为信息相结合，比如对于整个实验室的用电数据在早上突升，那么可能是大家都来上班了
+        7. 如果从某个点到一天结束数据都为0，那是因为未来的数据还没有到达，所以你可以直接忽略掉这一点
+        
+        你的分析将帮助实验室人员快速理解当前用电状况，发现潜在问题，并做出数据驱动的决策。
+        """
+    )
+
+    # 构建消息列表
+    messages = [system_message]
+
+    # 加载历史消息
+    chat_history = st.session_state[history_flag] if history_flag in st.session_state else None
+    if chat_history:
+        history_promt = []
+        # 保留最近max_history条的
+        if len(chat_history) > max_history:
+            # 保留最近的max_history条消息
+            truncated_history = chat_history[-max_history:]
+            for role, content in truncated_history:
+                history_promt.append((role, content))
+
+            # 总结前面的消息
+            conclusion_promt = """
+            请总结上述对话，需要：
+            1. 保留所有关键信息点和重要问答
+            2. 维持对话的逻辑顺序和上下文连贯性
+            3. 删减重复内容、客套语和不必要的细节
+            4. 使用简洁直接的语言表达
+            5. 特别注意保留与数据查询、时间日期和设备相关的具体细节
+            
+            总结后的内容应当让模型理解之前的对话背景，但字数不超过原文的30%。
+            """
+            history_previous = chat_history[:-max_history]+[('user',conclusion_promt)]
+            summarize_prompt = ChatPromptTemplate.from_messages(history_previous)
+            llm = ChatOpenAI(
+                model='deepseek-ai/DeepSeek-V3',
+                api_key=API_SERVER['siliconflow']['API_KEY'],
+                base_url=API_SERVER['siliconflow']['BASE_URL'],
+            )
+            summarize_chat = summarize_prompt | llm
+            summarization = summarize_chat.invoke(input={}).content
+            # 将上述内容添加到prompt中去
+            messages.append(('system', summarization))
+            messages = messages + truncated_history
+        else:
+            messages = messages + chat_history
+
+    # 构建针对当前页面的提示模板
+    current_query = Get_CurrentQuery_SideBar(current_query)
+    messages.append(('user', current_query))
+    messages.append(MessagesPlaceholder(variable_name="agent_scratchpad"))
+
+    return ChatPromptTemplate.from_messages(messages)
+
+def Get_Prompt_Template_Chat(current_query, max_history=10):
     """
-    构建带有历史记忆和相关示例的提示模板
+    构建带有历史相关示例的提示模板记忆和
     
     参数:
     chat_history: 历史对话列表，每项为(role, content)
@@ -49,6 +171,7 @@ def Get_Prompt_Template(current_query=None, max_history=10):
     max_history: 保留的最大历史消息数量
     """
     chat_history = st.session_state.chat_history if 'chat_history' in st.session_state else None
+
     
     # 选择相关示例
     # relevant_examples = example_selector({'user': current_query})
@@ -97,7 +220,7 @@ def Get_Prompt_Template(current_query=None, max_history=10):
         # 保留最近max_history条的
         if len(chat_history) > max_history:
             # 保留最近的max_history条消息
-            truncated_history = chat_history[-4:]
+            truncated_history = chat_history[-max_history:]
             for role, content in truncated_history:
                 history_promt.append((role, content))
 
@@ -127,8 +250,6 @@ def Get_Prompt_Template(current_query=None, max_history=10):
         else:
             messages = messages + chat_history
 
-
-    
     # 添加当前用户输入和agent_scratchpad占位符
     messages.append(('user', '{current_query}'))
     messages.append(MessagesPlaceholder(variable_name="agent_scratchpad"))

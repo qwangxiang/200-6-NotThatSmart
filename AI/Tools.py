@@ -7,9 +7,8 @@ from pyecharts import options as opts
 from pyecharts.charts import Line
 from streamlit_echarts import st_pyecharts as st_echarts
 
-
 '''
-定义工具函数
+定义供智能体调用的工具函数
 '''
 tools = []
 

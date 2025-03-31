@@ -10,6 +10,8 @@ from Globals import TIME_INTERVAL, PHONE_NUM, PASSWORD
 from streamlit_extras.card import card
 from streamlit_autorefresh import st_autorefresh
 from streamlit_option_menu import option_menu
+from AI.BuildAgent import Get_Agent_With_History, StreamHandler, Link_To_LangSmith
+from AI.Lib import Show_message
 
 st_autorefresh(interval=TIME_INTERVAL * 60 * 1000, key="autorefresh")
 
@@ -43,8 +45,11 @@ def power_curve():
     df = ReadData.ReadData_Day(beeId=BeeID, mac=mac, time=date, PhoneNum=PhoneNum, password=password, DataType='P')
     data_raw = df.copy()
     DataType = 'P' if DataType=='功率' else 'Energy'
+    current_query['DataType'] = DataType
     if DataType=='P':
         df = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType=DataType)
+        current_query['Data'] = str(df['P'].to_numpy().copy())
+        current_query['Time'] = str(df['Time'].to_numpy().copy())
         if show_raw_data:
             dataset = Form_Dataset(df, data_raw, DataType)
             figure = (
@@ -96,6 +101,9 @@ def power_curve():
                 )
             )
     else:
+        current_query['Data'] = str(data_raw['Energy'].to_numpy().copy())
+        current_query['Time'] = str(data_raw['Time'].to_numpy().copy())
+
         energy = ReadData.TimeIntervalTransform(df, date, time_interval=TIME_INTERVAL, DataType='P2Energy')
         # 画柱形图
         x_axis = [i[-8:] for i in energy['Time'].tolist()]
@@ -279,8 +287,6 @@ def ShowDeviceConsumption():
     )
     st_echarts(figure, height=250, width=250)
 
-
-
 def ShowPeakAndValley():
     '''
     峰谷情况展示
@@ -417,6 +423,28 @@ def ShowRisingEdgeAndFallingEdge():
         }
     )
 
+# 侧边栏接入人工智能
+def SideBar_Chat():
+    with st.sidebar:
+        # 准备回答容器
+        answer_container = st.chat_message("ai")
+        
+        with answer_container:
+            stream_handler = StreamHandler(st.empty())
+
+        if current_query['Data']!=last_query['Data'] or current_query['Time']!=last_query['Time'] or current_query['DataType']!=last_query['DataType']:
+            last_query['Data'] = current_query['Data']
+            last_query['Time'] = current_query['Time']
+            last_query['DataType'] = current_query['DataType']
+
+
+            agent_executor = Get_Agent_With_History(api_server, model, current_query=current_query, stream_handler=stream_handler, AgentType='SideBar', history_flag='Overview_history')
+            answer = agent_executor.invoke({'current_query':'请你按照上述要求分析这一数据'})['output']
+
+            # 存储最终答案
+            st.session_state.Overview_history.append(('ai', answer))
+
+
 if __name__=='__page__':
     st.title('用电总览')
 
@@ -427,8 +455,32 @@ if __name__=='__page__':
     mac = 'Mt3-M1-84f703120b64'
     containe1_height = 830
 
-    # 其他参数
-    
+    # 大模型信息
+    api_server = 'siliconflow'
+    model = 'Qwen/QwQ-32B'
+
+    # 加载历史消息
+    if 'Overview_history' not in st.session_state:
+        st.session_state.Overview_history = []
+
+    current_query = {
+        'name': '用电总览',
+        'Data': None,
+        'Time': None,
+        'DataType': None
+    }
+    last_query = {
+        'Data': None,
+        'Time': None,
+        'DataType': None
+    }
+
+    # 连接到LangSmith
+    Link_To_LangSmith(api_server)
+
+    # 初始化消息区域
+    with st.sidebar:
+        Show_message(history_flag='Overview_history')
 
     # 全局变量
     date = None
@@ -468,6 +520,8 @@ if __name__=='__page__':
     if Calculate_Peak_Valley_Prop(date)[0]/(Calculate_Peak_Valley_Prop(date)[0]+Calculate_Peak_Valley_Prop(date)[1])<0.7:
         st.warning('高峰用电占比过少，请注意检查用电情况。')
 
+
+    SideBar_Chat()
 
 
 
