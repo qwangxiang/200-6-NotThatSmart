@@ -278,7 +278,7 @@ def ReadData_RealTime(beeId:str, PhoneNum:str, password:str, DataType:str='P'):
         return None
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
-def Get_WorkStation_RealTime()->list:
+def Get_WorkStation_RealTime_()->list:
     '''
     获取每个工位的实施功率，现在是针对24个工位的版本
     '''
@@ -295,7 +295,25 @@ def Get_WorkStation_RealTime()->list:
             res[0,i] += text_1[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_1 else 0.0
             res[0,i] += text_2[workstation_lib[i+22]['mac'][j]] if workstation_lib[i+22]['mac'][j] in text_2 else 0.0
     res = np.round(res, 2)
-    return [[i, j, res[i, j]] for i in range(8) for j in range(3)]
+    return res
+
+@st.cache_data(ttl=TIME_INTERVAL*60)
+def Get_WorkStation_RealTime(dim:int=2)->list:
+    '''
+    获取每个工位的实施功率，现在是针对24个工位的版本
+    dim : int
+        工位的维度，2返回表格样式的数据，1返回一维数据
+    '''
+    res = Get_WorkStation_RealTime_()
+    if dim==2:
+        return [[i, j, res[i, j]] for i in range(8) for j in range(3)]
+    else:
+        res_ = []
+        for i in range(21):
+            res_.append(res[i//3+1,i%3])
+        for i in range(3):
+            res_.append(res[0,i])
+        return res_
 
 @st.cache_data(ttl=TIME_INTERVAL*60)
 def Get_Device_RealTime()->dict:
