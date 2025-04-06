@@ -106,9 +106,10 @@ def Get_Prompt_Template_SideBar(current_query, history_flag):
         2. 分析应适应当前上下文（当前页面是设备级还是实验室级数据）
         3. 不要询问用户更多信息，根据可见数据直接给出最佳分析
         4. 如果数据不足以得出确定结论，坦率指出并给出基于有限信息的初步分析
-        5. 你只需要对提供黑泥的数据按照你的知识库进行分析即可，不需要调用工具之类的操作，如果没有读取到有效数据，你可以直接在回答中指出这一点
+        5. 你只需要对提供给你的数据按照你的知识库进行分析即可，不需要调用工具之类的操作，如果没有读取到有效数据，你可以直接在回答中指出这一点
         6. 注意将数据的变化和人的行为信息相结合，比如对于整个实验室的用电数据在早上突升，那么可能是大家都来上班了
         7. 如果从某个点到一天结束数据都为0，那是因为未来的数据还没有到达，所以你可以直接忽略掉这一点
+        8. 一般来说，数据都是15分钟一个点，且提供给你的数据序列和时间序列中的点是一一对应的，即某个数据发生在该时间点
         
         你的分析将帮助实验室人员快速理解当前用电状况，发现潜在问题，并做出数据驱动的决策。
         """
@@ -116,43 +117,8 @@ def Get_Prompt_Template_SideBar(current_query, history_flag):
 
     # 构建消息列表
     messages = [system_message]
+    # SidebarAI只提供提供初步的探索功能，所以不需要加载历史消息。
 
-    # 加载历史消息
-    chat_history = st.session_state[history_flag] if history_flag in st.session_state else None
-    if chat_history:
-        history_promt = []
-        # 保留最近max_history条的
-        if len(chat_history) > max_history:
-            # 保留最近的max_history条消息
-            truncated_history = chat_history[-max_history:]
-            for role, content in truncated_history:
-                history_promt.append((role, content))
-
-            # 总结前面的消息
-            conclusion_promt = """
-            请总结上述对话，需要：
-            1. 保留所有关键信息点和重要问答
-            2. 维持对话的逻辑顺序和上下文连贯性
-            3. 删减重复内容、客套语和不必要的细节
-            4. 使用简洁直接的语言表达
-            5. 特别注意保留与数据查询、时间日期和设备相关的具体细节
-            
-            总结后的内容应当让模型理解之前的对话背景，但字数不超过原文的30%。
-            """
-            history_previous = chat_history[:-max_history]+[('user',conclusion_promt)]
-            summarize_prompt = ChatPromptTemplate.from_messages(history_previous)
-            llm = ChatOpenAI(
-                model='deepseek-ai/DeepSeek-V3',
-                api_key=API_SERVER['siliconflow']['API_KEY'],
-                base_url=API_SERVER['siliconflow']['BASE_URL'],
-            )
-            summarize_chat = summarize_prompt | llm
-            summarization = summarize_chat.invoke(input={}).content
-            # 将上述内容添加到prompt中去
-            messages.append(('system', summarization))
-            messages = messages + truncated_history
-        else:
-            messages = messages + chat_history
 
     # 构建针对当前页面的提示模板
     current_query = Get_CurrentQuery_SideBar(current_query)
