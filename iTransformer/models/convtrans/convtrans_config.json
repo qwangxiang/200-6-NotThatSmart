@@ -1,1 +1,1 @@
-{"seq_length": 1440, "pred_length": 1, "batch_size": 512, "lr": 0.0016, "epochs": 50, "patience": 10}
+{"seq_length": 1440, "pred_length": 1, "batch_size": 512, "lr": 0.0016, "epochs": 20, "patience": 10}

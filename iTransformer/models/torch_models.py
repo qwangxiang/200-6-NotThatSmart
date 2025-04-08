@@ -1138,7 +1138,7 @@ class TorchConvTransformer(AbstractTimeSeriesModel):
         model_path = os.path.join(save_dir, f'{cls.model_type}_model.pth')
         config_path = os.path.join(save_dir, f'{cls.model_type}_config.json')
         input_shape_path = os.path.join(save_dir, 'input_shape.json')
-
+        
         if not all(os.path.exists(p) for p in [model_path, config_path, input_shape_path]):
             raise FileNotFoundError(f"模型文件缺失，无法加载模型")
             

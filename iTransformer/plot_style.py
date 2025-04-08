@@ -27,7 +27,7 @@ def find_font_file(font_name):
         # print(f"找到'{font_name}'相关的字体文件: {matches}")
         return matches
     else:
-        print(f"未找到'{font_name}'相关的字体文件")
+        # print(f"未找到'{font_name}'相关的字体文件")
         return []
 
 def clear_font_cache():
@@ -42,8 +42,8 @@ def clear_font_cache():
                 print(f"已删除字体缓存: {cache}")
             except Exception as e:
                 print(f"无法删除缓存文件 {cache}: {e}")
-    else:
-        print("未找到字体缓存文件")
+    # else:
+    #     print("未找到字体缓存文件")
 
 def apply_style(force=True):
     """强制应用样式设置，避免被其他设置覆盖"""
@@ -153,7 +153,7 @@ def apply_style(force=True):
         
         plt.figure = styled_figure
         
-        print("样式已强制应用于所有图表函数")
+        # print("样式已强制应用于所有图表函数")
 
 def test_times_new_roman():
     """测试Times New Roman字体是否正确应用"""
